@@ -3,11 +3,16 @@ package duoc.rocio.inventario.model;
 
 import java.time.LocalDate;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -22,18 +27,17 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "producto_inventario")
 public class ProductoInventario {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idProducto;
-    
+
     @NotBlank
-    @Column(name="nombre_producto_inventario", nullable = false)
+    @Column(name = "nombre_producto_inventario", nullable = false)
     private String nombreProInv;
 
-
     @NotBlank
-    @Column(name="codigo_sku", nullable = false)
+    @Column(name = "codigo_sku", nullable = false)
     private String codigoSku;
 
     @NotNull
@@ -43,10 +47,17 @@ public class ProductoInventario {
     @Min(0)
     @Column(name = "stock_actual_producto", nullable = false)
     private int stockActual;
-    
+
+    @Min(0)
+    @Column(name = "stock_minimo_producto", nullable = false)
+    private int stockMinimo;
+
     @NotBlank
     @Column(name = "estado_producto", nullable = false)
     private String estadoProd;
 
-
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_inventario", nullable = false)
+    @JsonBackReference
+    private Inventario inventario;
 }
