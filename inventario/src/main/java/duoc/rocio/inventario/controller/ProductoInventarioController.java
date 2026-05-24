@@ -98,16 +98,16 @@ public class ProductoInventarioController {
     
     //Consultar el stock y los datos de un producto en un inventario específico
     // GET api/ecomarket/v1/productos/inventario/1/producto/1/stock
-    @GetMapping("/inventario/{idInventario}/producto/{idProducto}")
+    @GetMapping("/inventario/{idInventario}/producto/{idProducto}/stock")
     public ResponseEntity<?> consultarStock(@PathVariable Long idInventario, @PathVariable Long idProducto) {
         return productoInventarioService.consultarStock(idInventario, idProducto);
     }
 
     //Actualizar el stock de un producto específico en un inventario específico
-    // PUT api/ecomarket/v1/productos/inventario/1/producto/1/stock
-    @PutMapping("/inventario/{idInventario}/producto/{idProducto}")
-    public ResponseEntity<String> actualizarStock(@PathVariable Long idInventario, @PathVariable Long idProducto, @RequestParam int cantidad) {
-        return productoInventarioService.actualizarStock(idInventario, idProducto, cantidad);
+    // PUT api/ecomarket/v1/productos/inventario/1/producto/1/stock?cantidad=20&idResponsable=7&motivo=Ajuste%20manual
+    @PutMapping("/inventario/{idInventario}/producto/{idProducto}/stock")
+    public ResponseEntity<String> actualizarStock(@PathVariable Long idInventario, @PathVariable Long idProducto, @RequestParam int cantidad, @RequestParam Long idResponsable, @RequestParam String motivo) {
+        return productoInventarioService.actualizarStock(idInventario, idProducto, cantidad, idResponsable, motivo);
     }
 
     //Eliminar un producto de un inventario

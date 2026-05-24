@@ -28,6 +28,9 @@ public class RestockService {
     @Autowired
     private ProveedorRepository proveedorRepository;
 
+    @Autowired
+    private MovimientoInventarioService movimientoInventarioService;
+
     // Obtener solicitudes de restock de un producto
     public List<Restock> obtenerSolicitudesPorProducto(Long idProducto) {
         return restockRepository.findByProducto_IdProducto(idProducto);
@@ -103,6 +106,10 @@ public class RestockService {
 
         ProductoInventario producto = solicitud.getProducto();
 
+        int stockAnterior = producto.getStockActual();
+        int cantidadRecibida = solicitud.getCantidadSolicitada();
+        int stockPosterior = stockAnterior + cantidadRecibida;
+
         int nuevoStock = producto.getStockActual() + solicitud.getCantidadSolicitada();
 
         producto.setStockActual(nuevoStock);
@@ -120,6 +127,8 @@ public class RestockService {
 
         productoInventarioRepository.save(producto);
         restockRepository.save(solicitud);
+
+        movimientoInventarioService.registrarMovimiento(producto, "ENTRADA_RESTOCK", cantidadRecibida, "Reposición aprobada mediante solicitud de restock", stockAnterior, stockPosterior, idAprobador);
 
         return ResponseEntity.status(200).body("Solicitud aprobada y stock actualizado correctamente");
     }

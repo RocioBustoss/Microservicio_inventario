@@ -11,6 +11,7 @@ import duoc.rocio.inventario.model.Inventario;
 import duoc.rocio.inventario.model.ProductoInventario;
 import duoc.rocio.inventario.repository.InventarioRepository;
 import duoc.rocio.inventario.repository.ProductoInventarioRepository;
+import jakarta.transaction.Transactional;
 
 
 @Service
@@ -23,6 +24,10 @@ public class ProductoInventarioService {
     //Conecta al repositorio de inventario
     @Autowired
     private InventarioRepository inventarioRepository;
+
+    //Conectar al repositorio de movimiento de inventario
+    @Autowired
+    private MovimientoInventarioService movimientoInventarioService;
 
     //Obtiene todos los productos de un inventario
     public List<ProductoInventario> obtenerProductosPorInventario(Long idInventario) {
@@ -73,24 +78,45 @@ public class ProductoInventarioService {
         return ResponseEntity.status(200).body(productoEncontrado.get());
     }
 
-    // Actualiza el stock por su id y asigna una cantidad
-    public ResponseEntity<String> actualizarStock(Long idProducto, Long idInventario, int cantidad) {
-        Optional<ProductoInventario> productoEncontrado = productoInventarioRepository.findByIdProductoAndInventarioIdInventario(idProducto, idInventario);
+    // Actualiza el stock por su id y asigna una cantidad. Luego agrega a los movimientos de inventario
+    @Transactional
+    public ResponseEntity<String> actualizarStock(Long idInventario, Long idProducto, int cantidad, Long idResponsable, String motivo) {
 
         if (cantidad < 0) {
             return ResponseEntity.status(400).body("El stock no puede ser menor que cero");
         }
+
+        Optional<ProductoInventario> productoEncontrado = productoInventarioRepository.findByIdProductoAndInventario_IdInventario(idInventario, idProducto);
 
         if (productoEncontrado.isEmpty()) {
             return ResponseEntity.status(404).body("Producto no encontrado");
         }
 
         ProductoInventario producto = productoEncontrado.get();
-        producto.setStockActual(cantidad);
 
-        if (cantidad == 0) {
+        int stockAnterior = producto.getStockActual();
+        int stockPosterior = cantidad;
+
+        if (stockAnterior == stockPosterior) {
+            return ResponseEntity.status(409).body("El stock ingresado es igual al stock actual");
+        }
+
+        String tipoMovimiento;
+        int cantidadMovimiento;
+
+        if (stockPosterior > stockAnterior) {
+            tipoMovimiento = "AJUSTE_ENTRADA";
+            cantidadMovimiento = stockPosterior - stockAnterior;
+        } else {
+            tipoMovimiento = "AJUSTE_SALIDA";
+            cantidadMovimiento = stockAnterior - stockPosterior;
+        }
+
+        producto.setStockActual(stockPosterior);
+
+        if (stockPosterior == 0) {
             producto.setEstadoProd("SIN_STOCK");
-        } else if (cantidad <= producto.getStockMinimo()){
+        } else if (stockPosterior <= producto.getStockMinimo()) {
             producto.setEstadoProd("STOCK_BAJO");
         } else {
             producto.setEstadoProd("ACTIVO");
@@ -98,7 +124,9 @@ public class ProductoInventarioService {
 
         productoInventarioRepository.save(producto);
 
-        return ResponseEntity.status(200).body("Stock actualizado correctamente");
+        movimientoInventarioService.registrarMovimiento(producto, tipoMovimiento, cantidadMovimiento, motivo, stockAnterior, stockPosterior, idResponsable);
+
+        return ResponseEntity.status(200).body("Stock actualizado y movimiento registrado correctamente");
     }
 
     // busca un producto en un inventario por su nombre
