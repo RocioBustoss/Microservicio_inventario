@@ -12,7 +12,7 @@ import duoc.rocio.inventario.service.ProductoInventarioService;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/api/inventarios")
+@RequestMapping("/api/ecomarket/v1/productos")
 public class ProductoInventarioController {
 
     @Autowired
@@ -20,7 +20,8 @@ public class ProductoInventarioController {
 
 
     //Obtener todos los productos de un inventario
-    @GetMapping("/{idInventario}/productos")
+    // GET api/ecomarket/v1/productos/inventario/1
+    @GetMapping("/inventario/{idInventario}")
     public ResponseEntity<?> obtenerProductosPorInventario(@PathVariable Long idInventario) {
 
         List<ProductoInventario> productos = productoInventarioService.obtenerProductosPorInventario(idInventario);
@@ -32,13 +33,16 @@ public class ProductoInventarioController {
     }
 
     //Agregar un producto a un inventario específico
-    @PostMapping("/{idInventario}/productos")
+    // POST api/ecomarket/v1/productos/inventario/1
+    @PostMapping("/inventario/{idInventario}")
     public ResponseEntity<String> agregarProducto(@PathVariable Long idInventario, @Valid @RequestBody ProductoInventario productoNuevo) {
         return productoInventarioService.agregarProducto(idInventario, productoNuevo);
     }
     
+
     // Buscar producto por nombre dentro de un inventario
-    @GetMapping("/{idInventario}/buscarNombre")
+    // GET api/ecomarket/v1/productos/inventario/1/buscarNombre?nombre=quix
+    @GetMapping("/inventario/{idInventario}/buscarNombre")
     public ResponseEntity<?> buscarPorNombre(@PathVariable Long idInventario, @RequestParam String nombre) {
 
         List<ProductoInventario> productos = productoInventarioService.buscarPorNombre(idInventario, nombre);
@@ -52,7 +56,8 @@ public class ProductoInventarioController {
 
 
     // Buscar productos por estado dentro de un inventario
-    @GetMapping("/{idInventario}/buscarEstado")
+    // GET api/ecomarket/v1/productos/inventario/1/buscarEstado?estado=ACTIVO
+    @GetMapping("/inventario/{idInventario}/buscarEstado")
     public ResponseEntity<?> buscarPorEstado(@PathVariable Long idInventario, @RequestParam String estado) {
         List<ProductoInventario> productos = productoInventarioService.buscarPorEstado(idInventario, estado);
 
@@ -64,9 +69,9 @@ public class ProductoInventarioController {
 
 
     // Busca productos bajo un umbral en un inventario específico
-    @GetMapping("/{idInventario}/buscarUmbral")
-    public ResponseEntity<?> buscarStockBajo(@PathVariable Long idInventario, @RequestParam int umbral) {
-
+    // GET api/ecomarket/v1/productos/inventario/1/stock-bajo/5
+    @GetMapping("/inventario/{idInventario}/stock-bajo/{umbral}")
+    public ResponseEntity<?> buscarStockBajo(@PathVariable Long idInventario, @PathVariable int umbral) {
         List<ProductoInventario> productos = productoInventarioService.buscarStockBajo(idInventario, umbral);
 
         if (productos.isEmpty()) {
@@ -79,7 +84,8 @@ public class ProductoInventarioController {
     
     
     //Obtener un producto por su id
-    @GetMapping("/productos/{idProducto}")
+    // GET api/ecomarket/v1/productos/1
+    @GetMapping("/{idProducto}")
     public ResponseEntity<?> obtenerProductoPorId(@PathVariable Long idProducto) {
 
         Optional<ProductoInventario> producto = productoInventarioService.obtenerProductoPorId(idProducto);
@@ -90,23 +96,28 @@ public class ProductoInventarioController {
         return ResponseEntity.status(404).body("Producto no encontrado");
     }
     
-    //Eliminar un producto del sistema
-    @DeleteMapping("/productos/{idProducto}")
-    public ResponseEntity<String> eliminarProductoSistema(@PathVariable Long idProducto) {
-        return productoInventarioService.eliminarProducto(idProducto);
-    }
-
-    
     //Consultar el stock y los datos de un producto en un inventario específico
-    @GetMapping("/{idInventario}/productos/{idProducto}/stock")
+    // GET api/ecomarket/v1/productos/inventario/1/producto/1/stock
+    @GetMapping("/inventario/{idInventario}/producto/{idProducto}")
     public ResponseEntity<?> consultarStock(@PathVariable Long idInventario, @PathVariable Long idProducto) {
         return productoInventarioService.consultarStock(idInventario, idProducto);
     }
 
-
     //Actualizar el stock de un producto específico en un inventario específico
-    @PutMapping("/{idInventario}/productos/{idProducto}/stock")
+    // PUT api/ecomarket/v1/productos/inventario/1/producto/1/stock
+    @PutMapping("/inventario/{idInventario}/producto/{idProducto}")
     public ResponseEntity<String> actualizarStock(@PathVariable Long idInventario, @PathVariable Long idProducto, @RequestParam int cantidad) {
         return productoInventarioService.actualizarStock(idInventario, idProducto, cantidad);
     }
+
+    //Eliminar un producto de un inventario
+    // DELETE api/ecomarket/v1/productos/inventario/1/producto/1
+    @DeleteMapping("/inventario/{idInventario}/producto/{idProducto}")
+    public ResponseEntity<String> eliminarProductoSistema(@PathVariable Long idInventario,@PathVariable Long idProducto) {
+        return productoInventarioService.eliminarProducto(idProducto);
+    }
+
+    
+
+
 }

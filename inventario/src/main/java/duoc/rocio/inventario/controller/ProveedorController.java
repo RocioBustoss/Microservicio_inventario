@@ -12,13 +12,14 @@ import duoc.rocio.inventario.service.ProveedorService;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/api/proveedores")
+@RequestMapping("/api/ecomarket/v1/proveedores")
 public class ProveedorController {
 
     @Autowired
     private ProveedorService proveedorService;
 
     // Obtener todos los proveedores
+    // GET api/ecomarket/v1/proveedores
     @GetMapping
     public ResponseEntity<?> obtenerProveedores() {
 
@@ -32,6 +33,7 @@ public class ProveedorController {
     }
 
     // Obtener proveedor por ID
+    // GET api/ecomarket/v1/proveedores/1
     @GetMapping("/{idProveedor}")
     public ResponseEntity<?> obtenerProveedorPorId(
             @PathVariable Long idProveedor) {
@@ -46,6 +48,7 @@ public class ProveedorController {
     }
 
     // Buscar proveedor por nombre
+    // GET api/ecomarket/v1/proveedores/buscarNombre?nombre=juan
     @GetMapping("/buscarNombre")
     public ResponseEntity<?> buscarPorNombre(@RequestParam String nombre) {
 
@@ -58,18 +61,21 @@ public class ProveedorController {
     }
 
     // Guardar proveedor
+    // POST api/ecomarket/v1/proveedores
     @PostMapping
     public ResponseEntity<String> guardarProveedor(@Valid @RequestBody Proveedor proveedorNuevo) {
         return proveedorService.guardarProveedor(proveedorNuevo);
     }
 
     // Actualizar proveedor
+    // PUT api/ecomarket/v1/proveedores/1
     @PutMapping("/{idProveedor}")
     public ResponseEntity<String> actualizarProveedor(@PathVariable Long idProveedor, @Valid @RequestBody Proveedor proveedorActualizado) {
         return proveedorService.actualizarProveedor(idProveedor, proveedorActualizado);
     }
 
     // Eliminar proveedor
+    // DELETE api/ecomarket/v1/proveedores/1
     @DeleteMapping("/{idProveedor}")
     public ResponseEntity<String> eliminarProveedor(@PathVariable Long idProveedor) {
         return proveedorService.eliminarProveedor(idProveedor);

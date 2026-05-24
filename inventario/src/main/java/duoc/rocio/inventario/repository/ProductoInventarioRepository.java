@@ -17,5 +17,6 @@ public interface ProductoInventarioRepository extends JpaRepository<ProductoInve
     List<ProductoInventario> findByInventarioIdInventarioAndStockActualLessThanEqual(Long idInventario, int umbral);
     boolean existsByInventarioIdInventarioAndCodigoSku(Long idInventario, String codigoSku);
     Optional<ProductoInventario> findByIdProductoAndInventarioIdInventario(Long idProducto, Long idInventario);
+    Optional<ProductoInventario> findByIdProductoAndInventario_IdInventario(Long idProducto, Long idInventario);
 
 }

@@ -18,13 +18,14 @@ import duoc.rocio.inventario.service.InventarioService;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/api/inventarios")
+@RequestMapping("/api/ecomarket/v1/inventarios")
 public class InventarioController {
 
     @Autowired
     private InventarioService inventarioService;
 
     // Obtener todos los inventarios existentes
+    // GET api/ecomarket/v1/inventarios
     @GetMapping
     public ResponseEntity<?> obtenerInventarios() {
 
@@ -39,6 +40,7 @@ public class InventarioController {
 
 
     //Obtener un inventario por su id
+    // GET api/ecomarket/v1/inventarios/1
     @GetMapping("/{idInventario}")
     public ResponseEntity<?> obtenerInventarioPorId(@PathVariable Long idInventario) {
 
@@ -52,6 +54,7 @@ public class InventarioController {
     }
 
     // Obtener el inventario de una tienda especifica
+    // GET api/ecomarket/v1/inventarios/tienda/1
     @GetMapping("/tienda/{idTienda}")
     public ResponseEntity<?> obtenerInventarioPorTienda(@PathVariable Long idTienda) {
 
@@ -65,12 +68,14 @@ public class InventarioController {
     }
 
     // Crear inventario para una tienda
+    // POST api/ecomarket/v1/inventarios
     @PostMapping
     public ResponseEntity<String> guardarInventario(@Valid @RequestBody Inventario inventarioNuevo) {
         return inventarioService.guardarInventario(inventarioNuevo);
     }
 
     // Eliminar inventario
+    // DELETE api/ecomarket/v1/inventarios/1
     @DeleteMapping("/{idInventario}")
     public ResponseEntity<String> eliminarInventario(@PathVariable Long idInventario) {
         return inventarioService.eliminarInventario(idInventario);
