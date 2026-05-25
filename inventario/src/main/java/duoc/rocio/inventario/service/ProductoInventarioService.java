@@ -1,6 +1,5 @@
 package duoc.rocio.inventario.service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -8,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import duoc.rocio.inventario.dto.ProductoDTO;
 import duoc.rocio.inventario.model.Inventario;
 import duoc.rocio.inventario.model.ProductoInventario;
 import duoc.rocio.inventario.repository.InventarioRepository;
@@ -142,18 +140,7 @@ public class ProductoInventarioService {
     }
 
     // busca productos con stock menor a un umbral
-    public List<ProductoDTO> buscarStockBajo(Long idInventario,int umbral) {
-        // Lista de productos con toda su info
-        List<ProductoInventario> productos = productoInventarioRepository.findByInventarioIdInventarioAndStockActualLessThanEqual(idInventario, umbral);
-
-        // Lista vacía de productoDTO
-        List<ProductoDTO> prodDTOs = new ArrayList<>();
-        
-        // Conversión ProductoInventario -> ProductoDTO
-        for (ProductoInventario prod : productos) {
-            prodDTOs.add(new ProductoDTO(prod.getIdProducto(), prod.getNombreProInv()));
-        }
-
-        return prodDTOs;
+    public List<ProductoInventario> buscarStockBajo(Long idInventario,int umbral) {
+        return productoInventarioRepository.findByInventarioIdInventarioAndStockActualLessThanEqual(idInventario, umbral);
     }
 }

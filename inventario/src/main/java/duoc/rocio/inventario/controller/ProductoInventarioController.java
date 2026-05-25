@@ -1,5 +1,6 @@
 package duoc.rocio.inventario.controller;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -73,15 +74,31 @@ public class ProductoInventarioController {
     // GET api/ecomarket/v1/productos/inventario/1/stock-bajo/5
     @GetMapping("/inventario/{idInventario}/stock-bajo/{umbral}")
     public ResponseEntity<?> buscarStockBajo(@PathVariable Long idInventario, @PathVariable int umbral) {
-        List<ProductoDTO> productos = productoInventarioService.buscarStockBajo(idInventario, umbral);
+        List<ProductoInventario> productos = productoInventarioService.buscarStockBajo(idInventario, umbral);
 
         if (productos.isEmpty()) {
             return ResponseEntity.status(204).body("No existen productos con stock menor al umbral establecido");
         }
         return ResponseEntity.status(200).body(productos);
     }
-    
 
+    // Filtra productos con stock bajo umbral y de inventario especifico
+    // Devuleve lista vacia o poblada
+    @GetMapping("/inventario-stock/{idInventario}/{umbral}")
+    public List<ProductoDTO> filtrarStockBajo(@PathVariable Long idInv, @PathVariable int umbral) {
+        // Lista de productos con toda su info
+        List<ProductoInventario> productos = productoInventarioService.buscarStockBajo(idInv, umbral);
+
+        // Lista vacía de productoDTO
+        List<ProductoDTO> prodDTOs = new ArrayList<>();
+        
+        // Conversión ProductoInventario -> ProductoDTO
+        for (ProductoInventario prod : productos) {
+            prodDTOs.add(new ProductoDTO(prod.getIdProducto(), prod.getNombreProInv()));
+        }
+
+        return prodDTOs;
+    }
     
     
     //Obtener un producto por su id
