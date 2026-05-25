@@ -113,6 +113,19 @@ public class ProductoInventarioController {
         }
         return ResponseEntity.status(404).body("Producto no encontrado");
     }
+
+    //Obtiene un producto por su id
+    // Devuelve true si lo encunetra, false de otro modo
+    @GetMapping("/{idProducto}/conexion")
+    public boolean existeProductoPorId(@PathVariable Long idProducto) {
+
+        Optional<ProductoInventario> producto = productoInventarioService.obtenerProductoPorId(idProducto);
+
+        if (producto.isPresent()) {
+            return true;
+        }
+        return false;
+    }
     
     //Consultar el stock y los datos de un producto en un inventario específico
     // GET api/ecomarket/v1/productos/inventario/1/producto/1/stock
