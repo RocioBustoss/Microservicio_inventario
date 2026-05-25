@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import duoc.rocio.inventario.dto.ProductoDTO;
 import duoc.rocio.inventario.model.ProductoInventario;
 import duoc.rocio.inventario.service.ProductoInventarioService;
 import jakarta.validation.Valid;
@@ -72,7 +73,7 @@ public class ProductoInventarioController {
     // GET api/ecomarket/v1/productos/inventario/1/stock-bajo/5
     @GetMapping("/inventario/{idInventario}/stock-bajo/{umbral}")
     public ResponseEntity<?> buscarStockBajo(@PathVariable Long idInventario, @PathVariable int umbral) {
-        List<ProductoInventario> productos = productoInventarioService.buscarStockBajo(idInventario, umbral);
+        List<ProductoDTO> productos = productoInventarioService.buscarStockBajo(idInventario, umbral);
 
         if (productos.isEmpty()) {
             return ResponseEntity.status(204).body("No existen productos con stock menor al umbral establecido");
