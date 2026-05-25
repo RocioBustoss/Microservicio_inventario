@@ -7,58 +7,140 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import duoc.rocio.inventario.model.Inventario;
 import duoc.rocio.inventario.model.ProductoInventario;
+import duoc.rocio.inventario.repository.InventarioRepository;
 import duoc.rocio.inventario.repository.ProductoInventarioRepository;
+import jakarta.transaction.Transactional;
+
 
 @Service
 public class ProductoInventarioService {
+
+    //Conecta al repositorio de productoInventario
     @Autowired
     private ProductoInventarioRepository productoInventarioRepository;
 
-    //Obtener todos los productos
-    public List<ProductoInventario> obtenerProductos(){
-        return productoInventarioRepository.findAll();
+    //Conecta al repositorio de inventario
+    @Autowired
+    private InventarioRepository inventarioRepository;
+
+    //Conectar al repositorio de movimiento de inventario
+    @Autowired
+    private MovimientoInventarioService movimientoInventarioService;
+
+    //Obtiene todos los productos de un inventario
+    public List<ProductoInventario> obtenerProductosPorInventario(Long idInventario) {
+        return productoInventarioRepository.findByInventarioIdInventario(idInventario);
     }
-    
-    //Obtener producto por Id
-    public Optional<ProductoInventario> obtenerProductoPorId(Long idProducto){
+
+    //Obtiene un producto por su id
+    public Optional<ProductoInventario> obtenerProductoPorId(Long idProducto) {
         return productoInventarioRepository.findById(idProducto);
     }
 
-    //Guardar producto
-    public ResponseEntity<String> guardarProducto(ProductoInventario productoNuevo){
-        if(productoInventarioRepository.existsByCodigoSku(productoNuevo.getCodigoSku())){
-            //Si el producto existe, no lo agrego
-            return ResponseEntity.status(409).body("Producto ya existe");
+    //Agraga un producto a un inventario específico (ej: quix a la tienda de San Pedro)
+    public ResponseEntity<String> agregarProducto(Long idInventario, ProductoInventario productoNuevo) {
+        Optional<Inventario> inventarioEncontrado = inventarioRepository.findById(idInventario);
 
+        if (inventarioEncontrado.isEmpty()) {
+            return ResponseEntity.status(404).body("Inventario no encontrado");
         }
+
+        if (productoInventarioRepository.existsByInventarioIdInventarioAndCodigoSku(idInventario, productoNuevo.getCodigoSku())) {
+            return ResponseEntity.status(409).body("El producto ya existe en este inventario");
+        }
+
+        productoNuevo.setInventario(inventarioEncontrado.get());
         productoInventarioRepository.save(productoNuevo);
-        return ResponseEntity.status(200).body("Producto guardado correctamente");
+
+        return ResponseEntity.status(201).body("Producto agregado al inventario correctamente");
     }
 
-    //Eliminar producto
-    public ResponseEntity<String> eliminarProducto(Long idProductoEliminar){
-        if(productoInventarioRepository.existsById(idProductoEliminar)){
-            productoInventarioRepository.deleteById(idProductoEliminar);
-            return ResponseEntity.status(200).body("Producto eliminado correctamente");
+    //Elimina un producto por su id
+    public ResponseEntity<String> eliminarProducto(Long idProducto) {
+        if (!productoInventarioRepository.existsById(idProducto)) {
+            return ResponseEntity.status(404).body("Producto no encontrado");
         }
-        return ResponseEntity.status(404).body("Producto no encontrado");
+
+        productoInventarioRepository.deleteById(idProducto);
+        return ResponseEntity.status(200).body("Producto eliminado correctamente");
     }
 
-    //Buscar producto por nombre
-    public List<ProductoInventario> buscarPorNombre(String nombreBuscado){
-        return productoInventarioRepository.findByNombreProInvContainingIgnoreCase(nombreBuscado);
+    //Busca el stock de un producto por su id
+    public ResponseEntity<?> consultarStock(Long idProducto, Long idInventario) {
+        Optional<ProductoInventario> productoEncontrado = productoInventarioRepository.findByIdProductoAndInventarioIdInventario(idProducto, idInventario);
+
+        if (productoEncontrado.isEmpty()) {
+            return ResponseEntity.status(404).body("Producto no encontrado");
+        }
+
+        return ResponseEntity.status(200).body(productoEncontrado.get());
     }
 
-    //Buscar por estado
-    public List<ProductoInventario> buscarPorEstado(String estadoBuscado){
-        return productoInventarioRepository.findByEstadoProd(estadoBuscado);
+    // Actualiza el stock por su id y asigna una cantidad. Luego agrega a los movimientos de inventario
+    @Transactional
+    public ResponseEntity<String> actualizarStock(Long idInventario, Long idProducto, int cantidad, Long idResponsable, String motivo) {
+
+        if (cantidad < 0) {
+            return ResponseEntity.status(400).body("El stock no puede ser menor que cero");
+        }
+
+        Optional<ProductoInventario> productoEncontrado = productoInventarioRepository.findByIdProductoAndInventario_IdInventario(idInventario, idProducto);
+
+        if (productoEncontrado.isEmpty()) {
+            return ResponseEntity.status(404).body("Producto no encontrado");
+        }
+
+        ProductoInventario producto = productoEncontrado.get();
+
+        int stockAnterior = producto.getStockActual();
+        int stockPosterior = cantidad;
+
+        if (stockAnterior == stockPosterior) {
+            return ResponseEntity.status(409).body("El stock ingresado es igual al stock actual");
+        }
+
+        String tipoMovimiento;
+        int cantidadMovimiento;
+
+        if (stockPosterior > stockAnterior) {
+            tipoMovimiento = "AJUSTE_ENTRADA";
+            cantidadMovimiento = stockPosterior - stockAnterior;
+        } else {
+            tipoMovimiento = "AJUSTE_SALIDA";
+            cantidadMovimiento = stockAnterior - stockPosterior;
+        }
+
+        producto.setStockActual(stockPosterior);
+
+        if (stockPosterior == 0) {
+            producto.setEstadoProd("SIN_STOCK");
+        } else if (stockPosterior <= producto.getStockMinimo()) {
+            producto.setEstadoProd("STOCK_BAJO");
+        } else {
+            producto.setEstadoProd("ACTIVO");
+        }
+
+        productoInventarioRepository.save(producto);
+
+        movimientoInventarioService.registrarMovimiento(producto, tipoMovimiento, cantidadMovimiento, motivo, stockAnterior, stockPosterior, idResponsable);
+
+        return ResponseEntity.status(200).body("Stock actualizado y movimiento registrado correctamente");
     }
 
-    //Buscar por stock 
-    public List<ProductoInventario> buscarStockBajo(int umbral){
-        return productoInventarioRepository.findByStockActualLessThanEqual(umbral);
+    // busca un producto en un inventario por su nombre
+    public List<ProductoInventario> buscarPorNombre(Long idInventario, String nombreBuscado) {
+        return productoInventarioRepository.findByInventarioIdInventarioAndNombreProInvContainingIgnoreCase(idInventario, nombreBuscado);
     }
 
+    // busca un producto en un inventario por su estado
+    public List<ProductoInventario> buscarPorEstado(Long idInventario, String estadoBuscado) {
+        return productoInventarioRepository.findByInventarioIdInventarioAndEstadoProdContainingIgnoreCase( idInventario, estadoBuscado);
+    }
 
+    // busca productos con stock menor a un umbral
+    public List<ProductoInventario> buscarStockBajo(Long idInventario,int umbral) {
+        return productoInventarioRepository.findByInventarioIdInventarioAndStockActualLessThanEqual(idInventario, umbral);
+    }
 }
