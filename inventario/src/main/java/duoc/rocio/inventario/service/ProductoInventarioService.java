@@ -35,7 +35,7 @@ public class ProductoInventarioService {
             return ResponseEntity.status(404).body("Inventario no encontrado");
         }
         
-        if (productoInventarioRepository.existsByInventarioIdInventarioAndCodigoSku(idInventario, productoNuevo.getCodigoSku())) {
+        if (productoInventarioRepository.existsByInventario_IdInventarioAndCodigoSku(idInventario, productoNuevo.getCodigoSku())) {
             return ResponseEntity.status(409).body("El producto ya existe en este inventario");
         }
         
@@ -66,9 +66,21 @@ public class ProductoInventarioService {
     }
     
 
+    // Obtener un producto cruzando su ID y el ID de su inventario
+    public ResponseEntity<?> getProductoByInvAndId(Long idInventario, Long idProducto) {
+        
+        Optional<ProductoInventario> productoOpt = productoInventarioRepository.findByIdProductoAndInventario_IdInventario(idProducto, idInventario);
+
+        if (productoOpt.isEmpty()) {
+            return ResponseEntity.status(404).body("Producto no encontrado en el inventario especificado");
+        }
+
+        return ResponseEntity.status(200).body(productoOpt.get());
+    }
+
     //Busca el stock de un producto por su id
     public ResponseEntity<?> consultarStock(Long idProducto, Long idInventario) {
-        Optional<ProductoInventario> productoEncontrado = productoInventarioRepository.findByIdProductoAndInventarioIdInventario(idProducto, idInventario);
+        Optional<ProductoInventario> productoEncontrado = productoInventarioRepository.findByIdProductoAndInventario_IdInventario(idProducto, idInventario);
 
         if (productoEncontrado.isEmpty()) {
             return ResponseEntity.status(404).body("Producto no encontrado");
@@ -87,7 +99,7 @@ public class ProductoInventarioService {
     public ResponseEntity<String> actualizarStock(Long idInventario, Long idProducto, int cantidad) {
         
         
-        Optional<ProductoInventario> productoEncontrado = productoInventarioRepository.findByIdProductoAndInventarioIdInventario(idProducto, idInventario);
+        Optional<ProductoInventario> productoEncontrado = productoInventarioRepository.findByIdProductoAndInventario_IdInventario(idProducto, idInventario);
         
         if (productoEncontrado.isEmpty()) {
             return ResponseEntity.status(404).body("Producto no encontrado");
@@ -115,13 +127,13 @@ public class ProductoInventarioService {
     
     // busca un producto en un inventario por su nombre
     public List<ProductoInventario> findByNombre(Long idInventario, String nombreBuscado) {
-        return productoInventarioRepository.findByInventarioIdInventarioAndNombreProInvContainingIgnoreCase(idInventario, nombreBuscado);
+        return productoInventarioRepository.findByInventario_IdInventarioAndNombreProdContainingIgnoreCase(idInventario, nombreBuscado);
     }
     
     
     // busca productos con stock menor a un umbral
     public List<ProductoInventario> buscarStockBajo(Long idInventario,int umbral) {
-        return productoInventarioRepository.findByInventarioIdInventarioAndStockActualLessThanEqual(idInventario, umbral);
+        return productoInventarioRepository.findByInventario_IdInventarioAndStockActualLessThanEqual(idInventario, umbral);
     }
 
     //Elimina un producto por su id

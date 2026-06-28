@@ -21,6 +21,8 @@ public class ProductoInventarioController {
     private ProductoInventarioService productoInventarioService;
 
     
+
+
     //Agregar un producto a un inventario específico
     // POST api/ecomarket/v1/productos/inventario/1
     @PostMapping("/inventario/{idInventario}")
@@ -47,6 +49,16 @@ public class ProductoInventarioController {
         }
 
         return prodDTOs;
+    }
+
+    // Obtener un producto específico dentro de un inventario específico
+    // GET api/ecomarket/v1/productos/inventario/2/producto/1
+    @GetMapping("/inventario/{idInventario}/producto/{idProducto}")
+    public ResponseEntity<?> obtenerProductoDeInventario(
+            @PathVariable Long idInventario, 
+            @PathVariable Long idProducto) {
+                
+        return productoInventarioService.getProductoByInvAndId(idInventario, idProducto);
     }
 
     // Buscar producto por nombre dentro de un inventario
@@ -117,7 +129,7 @@ public class ProductoInventarioController {
     }
 
     //Actualizar el stock de un producto específico en un inventario específico
-    // PUT api/ecomarket/v1/productos/inventario/1/producto/1/stock?cantidad=20&idResponsable=7&motivo=Ajuste%20manual
+    // PUT api/ecomarket/v1/productos/inventario/1/producto/1/stock?cantidad=20
     @PutMapping("/inventario/{idInventario}/producto/{idProducto}/stock")
     public ResponseEntity<String> actualizarStock(@PathVariable Long idInventario, @PathVariable Long idProducto, @RequestParam int cantidad) {
         return productoInventarioService.actualizarStock(idInventario, idProducto, cantidad);

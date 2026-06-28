@@ -34,12 +34,8 @@ public class InventarioService {
     }
 
     public ResponseEntity<String> guardarInv(Inventario invNuevo) {
-        if (!inventarioRepository.existsById(invNuevo.getIdInventario())) {
-            inventarioRepository.save(invNuevo);
-            return ResponseEntity.status(201).body("Inventario creado correctamente");
-
-        }
-        return ResponseEntity.status(409).body("Ya existe un inventario con ese ID");
+        inventarioRepository.save(invNuevo);
+        return ResponseEntity.status(201).body("Inventario creado correctamente");
     }
 
     public ResponseEntity<String> eliminarInv(Long idInventario) {
