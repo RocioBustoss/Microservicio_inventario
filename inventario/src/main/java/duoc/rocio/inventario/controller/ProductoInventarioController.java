@@ -20,34 +20,41 @@ public class ProductoInventarioController {
     @Autowired
     private ProductoInventarioService productoInventarioService;
 
-
-    //Obtener todos los productos de un inventario
-    // GET api/ecomarket/v1/productos/inventario/1
-    @GetMapping("/inventario/{idInventario}")
-    public ResponseEntity<?> obtenerProductosPorInventario(@PathVariable Long idInventario) {
-
-        List<ProductoInventario> productos = productoInventarioService.obtenerProductosPorInventario(idInventario);
-
-        if (productos.isEmpty()) {
-            return ResponseEntity.status(204).body("El inventario para la tienda seleccionada está vacío");
-        }
-        return ResponseEntity.status(200).body(productos);
-    }
-
+    
     //Agregar un producto a un inventario específico
     // POST api/ecomarket/v1/productos/inventario/1
     @PostMapping("/inventario/{idInventario}")
     public ResponseEntity<String> agregarProducto(@PathVariable Long idInventario, @Valid @RequestBody ProductoInventario productoNuevo) {
-        return productoInventarioService.agregarProducto(idInventario, productoNuevo);
+        return productoInventarioService.agregarProd(idInventario, productoNuevo);
     }
     
+
+    //Obtener todos los productos de un inventario
+    // GET api/ecomarket/v1/productos/inventario/1
+    @GetMapping("/inventario/{idInventario}")
+    public List<ProductoDTO> obtenerProductosPorInventario(@PathVariable Long idInventario) {
+        
+        List<ProductoInventario> productos = productoInventarioService.getProductosByInv(idInventario);
+
+        List<ProductoDTO> prodDTOs = new ArrayList<>();
+        
+        for (ProductoInventario prod : productos) {
+            prodDTOs.add(new ProductoDTO(
+                prod.getIdProducto(), 
+                prod.getNombreProd(), 
+                prod.getStockActual()
+            ));
+        }
+
+        return prodDTOs;
+    }
 
     // Buscar producto por nombre dentro de un inventario
     // GET api/ecomarket/v1/productos/inventario/1/buscarNombre?nombre=quix
     @GetMapping("/inventario/{idInventario}/buscarNombre")
     public ResponseEntity<?> buscarPorNombre(@PathVariable Long idInventario, @RequestParam String nombre) {
 
-        List<ProductoInventario> productos = productoInventarioService.buscarPorNombre(idInventario, nombre);
+        List<ProductoInventario> productos = productoInventarioService.findByNombre(idInventario, nombre);
 
         if (productos.isEmpty()) {
             return ResponseEntity.status(204).body("No existen productos con el nombre solicitado en este inventario");
@@ -57,56 +64,31 @@ public class ProductoInventarioController {
     }
 
 
-    // Buscar productos por estado dentro de un inventario
-    // GET api/ecomarket/v1/productos/inventario/1/buscarEstado?estado=ACTIVO
-    @GetMapping("/inventario/{idInventario}/buscarEstado")
-    public ResponseEntity<?> buscarPorEstado(@PathVariable Long idInventario, @RequestParam String estado) {
-        List<ProductoInventario> productos = productoInventarioService.buscarPorEstado(idInventario, estado);
-
-        if (productos.isEmpty()) {
-            return ResponseEntity.status(204).body("No existen productos con el estado solicitado en este inventario");
-        }
-        return ResponseEntity.status(200).body(productos);
-    }
-
-
-    // Busca productos bajo un umbral en un inventario específico
-    // GET api/ecomarket/v1/productos/inventario/1/stock-bajo/5
-    @GetMapping("/inventario/{idInventario}/stock-bajo/{umbral}")
-    public ResponseEntity<?> buscarStockBajo(@PathVariable Long idInventario, @PathVariable int umbral) {
-        List<ProductoInventario> productos = productoInventarioService.buscarStockBajo(idInventario, umbral);
-
-        if (productos.isEmpty()) {
-            return ResponseEntity.status(204).body("No existen productos con stock menor al umbral establecido");
-        }
-        return ResponseEntity.status(200).body(productos);
-    }
-
     // Filtra productos con stock bajo umbral y de inventario especifico
-    // Devuleve lista vacia o poblada
-    @GetMapping("/inventario-stock/{idInventario}/{umbral}")
+    // GET api/ecomarket/v1/productos/inventario/1/stock-bajo/5
+    @GetMapping("/inventario/{idInv}/stock-bajo/{umbral}")
     public List<ProductoDTO> filtrarStockBajo(@PathVariable Long idInv, @PathVariable int umbral) {
-        // Lista de productos con toda su info
         List<ProductoInventario> productos = productoInventarioService.buscarStockBajo(idInv, umbral);
 
-        // Lista vacía de productoDTO
         List<ProductoDTO> prodDTOs = new ArrayList<>();
         
         // Conversión ProductoInventario -> ProductoDTO
         for (ProductoInventario prod : productos) {
-            prodDTOs.add(new ProductoDTO(prod.getIdProducto(), prod.getNombreProInv()));
+            prodDTOs.add(new ProductoDTO(
+                prod.getIdProducto(), 
+                prod.getNombreProd(), 
+                prod.getStockActual()));
         }
 
         return prodDTOs;
     }
-    
     
     //Obtener un producto por su id
     // GET api/ecomarket/v1/productos/1
     @GetMapping("/{idProducto}")
     public ResponseEntity<?> obtenerProductoPorId(@PathVariable Long idProducto) {
 
-        Optional<ProductoInventario> producto = productoInventarioService.obtenerProductoPorId(idProducto);
+        Optional<ProductoInventario> producto = productoInventarioService.getProdById(idProducto);
 
         if (!producto.isEmpty()) {
             return ResponseEntity.status(200).body(producto.get());
@@ -119,7 +101,7 @@ public class ProductoInventarioController {
     @GetMapping("/{idProducto}/conexion")
     public boolean existeProductoPorId(@PathVariable Long idProducto) {
 
-        Optional<ProductoInventario> producto = productoInventarioService.obtenerProductoPorId(idProducto);
+        Optional<ProductoInventario> producto = productoInventarioService.getProdById(idProducto);
 
         if (producto.isPresent()) {
             return true;
@@ -137,8 +119,8 @@ public class ProductoInventarioController {
     //Actualizar el stock de un producto específico en un inventario específico
     // PUT api/ecomarket/v1/productos/inventario/1/producto/1/stock?cantidad=20&idResponsable=7&motivo=Ajuste%20manual
     @PutMapping("/inventario/{idInventario}/producto/{idProducto}/stock")
-    public ResponseEntity<String> actualizarStock(@PathVariable Long idInventario, @PathVariable Long idProducto, @RequestParam int cantidad, @RequestParam Long idResponsable, @RequestParam String motivo) {
-        return productoInventarioService.actualizarStock(idInventario, idProducto, cantidad, idResponsable, motivo);
+    public ResponseEntity<String> actualizarStock(@PathVariable Long idInventario, @PathVariable Long idProducto, @RequestParam int cantidad) {
+        return productoInventarioService.actualizarStock(idInventario, idProducto, cantidad);
     }
 
     //Eliminar un producto de un inventario

@@ -15,27 +15,23 @@ public class ProveedorService {
     @Autowired
     private ProveedorRepository proveedorRepository;
     
-    public List<Proveedor> obtenerProveedores(){
+    public List<Proveedor> getProveedores(){
         return proveedorRepository.findAll();
     }
 
 
-    public Optional<Proveedor> obtenerProveedorPorId(Long idProveedor){
+    public Optional<Proveedor> getProvById(Long idProveedor){
         return proveedorRepository.findById(idProveedor);
     }
 
 
-    public ResponseEntity<String> guardarProveedor(Proveedor proveedorNuevo){
+    public ResponseEntity<String> guardarProv(Proveedor proveedorNuevo){
         if (proveedorRepository.existsByRut(proveedorNuevo.getRut())){
             return ResponseEntity.status(409).body("El proveedor ya se encuentra registrado");
         }
 
         proveedorRepository.save(proveedorNuevo);
         return ResponseEntity.status(201).body("Proveedor registrado correctamente");
-    }
-
-    public List<Proveedor> buscarPorNombre(String nombreBuscado){
-        return proveedorRepository.findByNombreContainingIgnoreCase(nombreBuscado);
     }
 
 
@@ -56,7 +52,8 @@ public class ProveedorService {
         return ResponseEntity.status(200).body("Proveedor actualizado correctamente");
     }
 
-    public ResponseEntity<String> eliminarProveedor(Long idProveedor){
+
+    public ResponseEntity<String> eliminarProv(Long idProveedor){
         if (!proveedorRepository.existsById(idProveedor)) {
             return ResponseEntity.status(404).body("Proveedor no encontrado");
         }

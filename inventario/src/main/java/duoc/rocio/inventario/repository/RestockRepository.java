@@ -10,9 +10,9 @@ import duoc.rocio.inventario.model.Restock;
 @Repository
 public interface RestockRepository extends JpaRepository<Restock, Long> {
 
-    List<Restock> findByProducto_IdProducto(Long idProducto);
-
     List<Restock> findByEstadoIgnoreCase(String estado);
 
     List<Restock> findByIdSolicitante(Long idSolicitante);
+
+    
 }
