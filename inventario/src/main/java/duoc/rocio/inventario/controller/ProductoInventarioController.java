@@ -21,13 +21,19 @@ public class ProductoInventarioController {
     private ProductoInventarioService productoInventarioService;
 
     
-
-
     //Agregar un producto a un inventario específico
     // POST api/ecomarket/v1/productos/inventario/1
     @PostMapping("/inventario/{idInventario}")
     public ResponseEntity<String> agregarProducto(@PathVariable Long idInventario, @Valid @RequestBody ProductoInventario productoNuevo) {
-        return productoInventarioService.agregarProd(idInventario, productoNuevo);
+        int resultado = productoInventarioService.agregarProd(idInventario, productoNuevo);
+        
+        if (resultado == 1) {
+            return ResponseEntity.status(404).body("Inventario no encontrado");
+        } else if (resultado == 2) {
+            return ResponseEntity.status(409).body("El producto ya existe en este inventario");
+        } else {
+            return ResponseEntity.status(201).body("Producto agregado al inventario correctamente");
+        }
     }
     
 
@@ -54,11 +60,15 @@ public class ProductoInventarioController {
     // Obtener un producto específico dentro de un inventario específico
     // GET api/ecomarket/v1/productos/inventario/2/producto/1
     @GetMapping("/inventario/{idInventario}/producto/{idProducto}")
-    public ResponseEntity<?> obtenerProductoDeInventario(
-            @PathVariable Long idInventario, 
-            @PathVariable Long idProducto) {
-                
-        return productoInventarioService.getProductoByInvAndId(idInventario, idProducto);
+    public ResponseEntity<?> obtenerProductoDeInventario(@PathVariable Long idInventario, @PathVariable Long idProducto) {
+        
+        Optional<ProductoInventario> producto = productoInventarioService.getProductoByInvAndId(idInventario, idProducto);
+        
+        if (producto.isPresent()) {
+            return ResponseEntity.status(200).body(producto.get());
+        } else {
+            return ResponseEntity.status(404).body("Producto no encontrado en el inventario especificado");
+        }
     }
 
     // Buscar producto por nombre dentro de un inventario
@@ -125,21 +135,48 @@ public class ProductoInventarioController {
     // GET api/ecomarket/v1/productos/inventario/1/producto/1/stock
     @GetMapping("/inventario/{idInventario}/producto/{idProducto}/stock")
     public ResponseEntity<?> consultarStock(@PathVariable Long idInventario, @PathVariable Long idProducto) {
-        return productoInventarioService.consultarStock(idInventario, idProducto);
+        
+        Optional<Integer> stock = productoInventarioService.consultarStock(idProducto, idInventario);
+        
+        if (stock.isPresent()) {
+            return ResponseEntity.status(200).body(stock.get());
+        } else {
+            return ResponseEntity.status(404).body("Producto no encontrado");
+        }
     }
 
     //Actualizar el stock de un producto específico en un inventario específico
     // PUT api/ecomarket/v1/productos/inventario/1/producto/1/stock?cantidad=20
-    @PutMapping("/inventario/{idInventario}/producto/{idProducto}/stock")
     public ResponseEntity<String> actualizarStock(@PathVariable Long idInventario, @PathVariable Long idProducto, @RequestParam int cantidad) {
-        return productoInventarioService.actualizarStock(idInventario, idProducto, cantidad);
+        
+        int resultado = productoInventarioService.actualizarStock(idInventario, idProducto, cantidad);
+        
+        if (resultado == 1){
+            return ResponseEntity.status(404).body("Producto no encontrado");
+        }
+        else if (resultado == 2){
+            return ResponseEntity.status(400).body("El stock a sumar no puede ser menor que cero");
+        }
+        else if (resultado == 3){
+            return ResponseEntity.status(409).body("La cantidad ingresada");
+        }
+        else {
+            return ResponseEntity.status(200).body("Stock actualizado correctamente");
+        }
     }
 
     //Eliminar un producto de un inventario
     // DELETE api/ecomarket/v1/productos/inventario/1/producto/1
     @DeleteMapping("/inventario/{idInventario}/producto/{idProducto}")
-    public ResponseEntity<String> eliminarProductoSistema(@PathVariable Long idInventario,@PathVariable Long idProducto) {
-        return productoInventarioService.eliminarProducto(idProducto);
+    public ResponseEntity<String> eliminarProductoSistema(@PathVariable Long idInventario, @PathVariable Long idProducto) {
+        
+        boolean eliminado = productoInventarioService.eliminarProducto(idProducto);
+        
+        if (eliminado) {
+            return ResponseEntity.status(200).body("Producto eliminado correctamente");
+        } else {
+            return ResponseEntity.status(404).body("Producto no encontrado");
+        }
     }
 
     

@@ -5,12 +5,9 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import duoc.rocio.inventario.dto.SolicitudRestockDTO;
 import duoc.rocio.inventario.model.ProdRestock;
 import duoc.rocio.inventario.model.ProductoInventario;
 import duoc.rocio.inventario.model.Proveedor;
@@ -34,11 +31,11 @@ public class RestockService {
 
 
     // CREAR LISTA DE RESTOCK VACÍA
-    public ResponseEntity<String> crearListaRestock(Long idProveedor, Long idSolicitante) {
+    public boolean crearListaRestock(Long idProveedor, Long idSolicitante) {
         Optional<Proveedor> proveedorEncontrado = proveedorRepository.findById(idProveedor);
         
         if (proveedorEncontrado.isEmpty()) {
-            return ResponseEntity.status(400).body("Proveedor no encontrado");
+            return false;
         }
 
         Restock nuevaLista = new Restock();
@@ -49,44 +46,40 @@ public class RestockService {
 
         restockRepository.save(nuevaLista);
 
-        return ResponseEntity.status(201).body("Lista de restock creada.");
+        return true;
     }
 
     // AGREGAR PRODUCTO A LA LISTA
     @Transactional
-    public ResponseEntity<String> agregarProd(Long idRestock, Long idProdInv, int cant) {
+    public int agregarProd(Long idRestock, Long idProdInv, int cant) {
         Optional<Restock> restockBuscado = restockRepository.findById(idRestock);
-        if (restockBuscado.isEmpty()) return ResponseEntity.status(404).body("Lista de restock no encontrada");
-
+        if (restockBuscado.isEmpty()) return 1; 
+        
         Optional<ProductoInventario> productoBuscado = productoInventarioRepository.findById(idProdInv);
-        if (productoBuscado.isEmpty()) return ResponseEntity.status(404).body("Producto no encontrado en inventario");
-
+        if (productoBuscado.isEmpty()) return 2;
+        
         Restock restock = restockBuscado.get();
         ProductoInventario producto = productoBuscado.get();
 
-        // Extraemos el nombre y guardamos la cantidad
         ProdRestock nuevoProdRestock = new ProdRestock();
         nuevoProdRestock.setNombre(producto.getNombreProd()); 
         nuevoProdRestock.setCantidad(cant);
-
         
         restock.getProductosRestock().add(nuevoProdRestock);
         restockRepository.save(restock);
 
-        return ResponseEntity.status(200).body("Producto agregado a la lista de restock");
+        return 0;
     }
 
     // MODIFICAR CANTIDAD DE UN PRODUCTO EN LA LISTA
     @Transactional
-    public ResponseEntity<String> modificarCant(Long idRestock, Long idProdRestock, int nuevaCant) {
+    public int modificarCant(Long idRestock, Long idProdRestock, int nuevaCant) {
         
         Optional<Restock> restockBuscado = restockRepository.findById(idRestock);
-        if (restockBuscado.isEmpty()) {
-            return ResponseEntity.status(404).body("Lista no encontrada");
-        }
+        
+        if (restockBuscado.isEmpty()) return 1;
         
         Restock restock = restockBuscado.get();
-        
         ProdRestock productoEncontrado = null;
 
         for (ProdRestock p : restock.getProductosRestock()) {
@@ -96,23 +89,19 @@ public class RestockService {
             }
         }
 
-        if (productoEncontrado == null) {
-            return ResponseEntity.status(404).body("El producto no está en esta lista");
-        }
+        if (productoEncontrado == null) return 2;
 
         productoEncontrado.setCantidad(nuevaCant);
         restockRepository.save(restock);
 
-        return ResponseEntity.status(200).body("Cantidad modificada correctamente");
+        return 0;
     }
 
     @Transactional
-    public ResponseEntity<String> eliminarProd(Long idRestock, Long idProdRestock) {
+    public int eliminarProd(Long idRestock, Long idProdRestock) {
         
         Optional<Restock> restockBuscado = restockRepository.findById(idRestock);
-        if (restockBuscado.isEmpty()) {
-            return ResponseEntity.status(404).body("Lista no encontrada");
-        }
+        if (restockBuscado.isEmpty()) return 1;
 
         Restock restock = restockBuscado.get();
         
@@ -124,59 +113,49 @@ public class RestockService {
                 break;
             }
         }
-        if (productoAEliminar == null) {
-            return ResponseEntity.status(404).body("El producto no se encontró en la lista");
-        }
+        if (productoAEliminar == null) return 2;
 
         restock.getProductosRestock().remove(productoAEliminar);
         restockRepository.save(restock);
         
-        return ResponseEntity.status(200).body("Producto removido de la lista");
+        return 0;
     }
 
     // 5. MOSTRAR RESTOCK COMPLETO
-    public ResponseEntity<?> mostrarRestock(Long idRestock) {
-        Optional<Restock> solicitud = restockRepository.findById(idRestock);
-        if (solicitud.isEmpty()) return ResponseEntity.status(404).body("Lista no encontrada");
-        
-        return ResponseEntity.status(200).body(solicitud.get());
+    public Optional<Restock> mostrarRestock(Long idRestock) {
+        return restockRepository.findById(idRestock);
     }
 
     // 6. MOSTRAR SOLO LOS PRODUCTOS DE UNA LISTA
-    public ResponseEntity<?> mostrarProductos(Long idRestock) {
+    public Optional<List<ProdRestock>> mostrarProductos(Long idRestock) {
         Optional<Restock> solicitud = restockRepository.findById(idRestock);
-        if (solicitud.isEmpty()) return ResponseEntity.status(404).body("Lista no encontrada");
         
-        return ResponseEntity.status(200).body(solicitud.get().getProductosRestock());
+        if (solicitud.isEmpty()) {
+            return Optional.empty();
+        }
+        
+        return Optional.of(solicitud.get().getProductosRestock());
     }
 
     // 7. APROBAR RESTOCK
     @Transactional
-    public ResponseEntity<String> aprobarRestock(Long idRestock, Long idAprobador) {
-        Optional<Restock> solicitudOpt = restockRepository.findById(idRestock);
-        if (solicitudOpt.isEmpty()) return ResponseEntity.status(404).body("Lista no encontrada");
+    public int aprobarRestock(Long idRestock, Long idAprobador) {
+        Optional<Restock> solicitud1 = restockRepository.findById(idRestock);
+        if (solicitud1.isEmpty()) return 1;
 
-        Restock solicitud = solicitudOpt.get();
+        Restock solicitud = solicitud1.get();
 
         if (!solicitud.getEstado().equalsIgnoreCase("PENDIENTE")) {
-            return ResponseEntity.status(409).body("La solicitud ya fue procesada");
+            return 2;
         }
 
-        // Recorremos todos los productos de la lista para actualizar el inventario real
         for (ProdRestock prodSolicitado : solicitud.getProductosRestock()) {
-            
-            // Buscamos el producto en el inventario por su NOMBRE
             Optional<ProductoInventario> prodInvOpt = productoInventarioRepository.findByNombreProd(prodSolicitado.getNombre());
             
             if (prodInvOpt.isPresent()) {
                 ProductoInventario producto = prodInvOpt.get();
-                int stockAnterior = producto.getStockActual();
-                int cantidadRecibida = prodSolicitado.getCantidad();
-                int nuevoStock = stockAnterior + cantidadRecibida;
-
-                producto.setStockActual(nuevoStock);
+                producto.setStockActual(producto.getStockActual() + prodSolicitado.getCantidad());
                 productoInventarioRepository.save(producto);
-
             }
         }
 
@@ -184,25 +163,25 @@ public class RestockService {
         solicitud.setEstado("APROBADO");
         restockRepository.save(solicitud);
 
-        return ResponseEntity.status(200).body("Solicitud aprobada y stock actualizado para todos los productos de la lista");
+        return 0;
     }
 
     // 8. RECHAZAR RESTOCK
-    public ResponseEntity<String> rechazarRestock(Long idRestock, Long idAprobador) {
+    public int rechazarRestock(Long idRestock, Long idAprobador) {
         Optional<Restock> solicitudOpt = restockRepository.findById(idRestock);
-        if (solicitudOpt.isEmpty()) return ResponseEntity.status(404).body("Lista no encontrada");
+        if (solicitudOpt.isEmpty()) return 1;
 
         Restock solicitud = solicitudOpt.get();
 
         if (!solicitud.getEstado().equalsIgnoreCase("PENDIENTE")) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("La solicitud ya fue procesada");
+            return 2;
         }
 
         solicitud.setIdAprobador(idAprobador);
         solicitud.setEstado("RECHAZADO");
         restockRepository.save(solicitud);
 
-        return ResponseEntity.status(200).body("Solicitud de restock rechazada");
+        return 0;
     }
 
 

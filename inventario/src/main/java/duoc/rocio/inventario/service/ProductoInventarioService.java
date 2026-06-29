@@ -28,21 +28,21 @@ public class ProductoInventarioService {
 
 
     //Agraga un producto a un inventario específico (ej: quix al inventario de San Pedro)
-    public ResponseEntity<String> agregarProd(Long idInventario, ProductoInventario productoNuevo) {
+    public int agregarProd(Long idInventario, ProductoInventario productoNuevo) {
         Optional<Inventario> inventarioEncontrado = inventarioRepository.findById(idInventario);
         
         if (inventarioEncontrado.isEmpty()) {
-            return ResponseEntity.status(404).body("Inventario no encontrado");
+            return 1;
         }
         
         if (productoInventarioRepository.existsByInventario_IdInventarioAndCodigoSku(idInventario, productoNuevo.getCodigoSku())) {
-            return ResponseEntity.status(409).body("El producto ya existe en este inventario");
+            return 2;
         }
         
         productoNuevo.setInventario(inventarioEncontrado.get());
         productoInventarioRepository.save(productoNuevo);
         
-        return ResponseEntity.status(201).body("Producto agregado al inventario correctamente");
+        return 0;
     }
     
     
@@ -67,61 +67,43 @@ public class ProductoInventarioService {
     
 
     // Obtener un producto cruzando su ID y el ID de su inventario
-    public ResponseEntity<?> getProductoByInvAndId(Long idInventario, Long idProducto) {
-        
-        Optional<ProductoInventario> productoOpt = productoInventarioRepository.findByIdProductoAndInventario_IdInventario(idProducto, idInventario);
-
-        if (productoOpt.isEmpty()) {
-            return ResponseEntity.status(404).body("Producto no encontrado en el inventario especificado");
-        }
-
-        return ResponseEntity.status(200).body(productoOpt.get());
+    public Optional<ProductoInventario> getProductoByInvAndId(Long idInventario, Long idProducto) {
+        return productoInventarioRepository.findByIdProductoAndInventario_IdInventario(idProducto, idInventario);
     }
 
     //Busca el stock de un producto por su id
-    public ResponseEntity<?> consultarStock(Long idProducto, Long idInventario) {
+    public Optional<Integer> consultarStock(Long idProducto, Long idInventario) {
         Optional<ProductoInventario> productoEncontrado = productoInventarioRepository.findByIdProductoAndInventario_IdInventario(idProducto, idInventario);
 
-        if (productoEncontrado.isEmpty()) {
-            return ResponseEntity.status(404).body("Producto no encontrado");
+        if (productoEncontrado.isPresent()) {
+            return Optional.of(productoEncontrado.get().getStockActual());
         }
 
-        ProductoInventario producto = productoEncontrado.get();
-        Integer stockActual = producto.getStockActual();
-
-        return ResponseEntity.status(200).body(stockActual);
-
+        return Optional.empty();
     }
 
     
     // Actualiza el stock por su id y asigna una cantidad.
     @Transactional
-    public ResponseEntity<String> actualizarStock(Long idInventario, Long idProducto, int cantidad) {
-        
+    public Integer actualizarStock(Long idInventario, Long idProducto, int cantidad) {
         
         Optional<ProductoInventario> productoEncontrado = productoInventarioRepository.findByIdProductoAndInventario_IdInventario(idProducto, idInventario);
         
-        if (productoEncontrado.isEmpty()) {
-            return ResponseEntity.status(404).body("Producto no encontrado");
-        }
+        if (productoEncontrado.isEmpty()) return 1;
         
-        if (cantidad < 0) {
-            return ResponseEntity.status(400).body("El stock a sumar no puede ser menor que cero");
-        }
-        
+        if (cantidad < 0) return 2;
+            
         ProductoInventario producto = productoEncontrado.get();
         
         Integer stockActual = producto.getStockActual();
         Integer stockPosterior = stockActual + cantidad;
         
-        if (stockActual.equals(stockPosterior)) {
-            return ResponseEntity.status(409).body("El stock ingresado es igual al stock actual");
-        }
-        
+        if (stockActual.equals(stockPosterior)) return 3;
+
         producto.setStockActual(stockPosterior);
         productoInventarioRepository.save(producto);
         
-        return ResponseEntity.status(200).body("Stock actualizado corectamente");
+        return 0;
     }
     
     
@@ -137,13 +119,13 @@ public class ProductoInventarioService {
     }
 
     //Elimina un producto por su id
-    public ResponseEntity<String> eliminarProducto(Long idProducto) {
+public boolean eliminarProducto(Long idProducto) {
         if (!productoInventarioRepository.existsById(idProducto)) {
-            return ResponseEntity.status(404).body("Producto no encontrado");
+            return false;
         }
     
         productoInventarioRepository.deleteById(idProducto);
-        return ResponseEntity.status(200).body("Producto eliminado correctamente");
+        return true;
     }
 
 }
