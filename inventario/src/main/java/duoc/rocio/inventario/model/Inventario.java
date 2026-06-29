@@ -14,7 +14,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -29,18 +28,14 @@ public class Inventario {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     public Long idInventario;
-
-    @NotNull
-    @Column(name = "id_tienda", nullable = false)
-    private Long idTienda;
     
     @NotBlank
     @Column(name="nombre_inventario", nullable = false)
-    public String nombreInventario;
+    public String nombreInv;
     
     @NotBlank
     @Column(name="descripcion_inventario", nullable = false)
-    public String descripcionInventario;
+    public String descripcionInv;
     
     @OneToMany(mappedBy = "inventario", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference

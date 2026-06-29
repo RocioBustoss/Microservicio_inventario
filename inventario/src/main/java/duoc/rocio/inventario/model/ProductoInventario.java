@@ -34,7 +34,7 @@ public class ProductoInventario {
 
     @NotBlank
     @Column(name = "nombre_producto_inventario", nullable = false)
-    private String nombreProInv;
+    private String nombreProd;
 
     @NotBlank
     @Column(name = "codigo_sku", nullable = false)
@@ -48,13 +48,6 @@ public class ProductoInventario {
     @Column(name = "stock_actual_producto", nullable = false)
     private int stockActual;
 
-    @Min(0)
-    @Column(name = "stock_minimo_producto", nullable = false)
-    private int stockMinimo;
-
-    @NotBlank
-    @Column(name = "estado_producto", nullable = false)
-    private String estadoProd;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_inventario", nullable = false)

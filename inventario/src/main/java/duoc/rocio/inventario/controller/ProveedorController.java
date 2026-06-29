@@ -23,7 +23,7 @@ public class ProveedorController {
     @GetMapping
     public ResponseEntity<?> obtenerProveedores() {
 
-        List<Proveedor> proveedores = proveedorService.obtenerProveedores();
+        List<Proveedor> proveedores = proveedorService.getProveedores();
 
         if (proveedores.isEmpty()) {
             return ResponseEntity.status(204).body("No existen proveedores registrados");
@@ -38,7 +38,7 @@ public class ProveedorController {
     public ResponseEntity<?> obtenerProveedorPorId(
             @PathVariable Long idProveedor) {
 
-        Optional<Proveedor> proveedor = proveedorService.obtenerProveedorPorId(idProveedor);
+        Optional<Proveedor> proveedor = proveedorService.getProvById(idProveedor);
 
         if (proveedor.isPresent()) {
             return ResponseEntity.status(200).body(proveedor.get());
@@ -47,24 +47,12 @@ public class ProveedorController {
         return ResponseEntity.status(204).body("Proveedor no encontrado");
     }
 
-    // Buscar proveedor por nombre
-    // GET api/ecomarket/v1/proveedores/buscarNombre?nombre=juan
-    @GetMapping("/buscarNombre")
-    public ResponseEntity<?> buscarPorNombre(@RequestParam String nombre) {
-
-        List<Proveedor> proveedores = proveedorService.buscarPorNombre(nombre);
-
-        if (proveedores.isEmpty()) {
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.ok(proveedores);
-    }
 
     // Guardar proveedor
     // POST api/ecomarket/v1/proveedores
     @PostMapping
     public ResponseEntity<String> guardarProveedor(@Valid @RequestBody Proveedor proveedorNuevo) {
-        return proveedorService.guardarProveedor(proveedorNuevo);
+        return proveedorService.guardarProv(proveedorNuevo);
     }
 
     // Actualizar proveedor
@@ -78,6 +66,6 @@ public class ProveedorController {
     // DELETE api/ecomarket/v1/proveedores/1
     @DeleteMapping("/{idProveedor}")
     public ResponseEntity<String> eliminarProveedor(@PathVariable Long idProveedor) {
-        return proveedorService.eliminarProveedor(idProveedor);
+        return proveedorService.eliminarProv(idProveedor);
     }
 }

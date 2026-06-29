@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import duoc.rocio.inventario.dto.InventarioResumenDTO;
 import duoc.rocio.inventario.model.Inventario;
 import duoc.rocio.inventario.service.InventarioService;
 import jakarta.validation.Valid;
@@ -28,8 +29,7 @@ public class InventarioController {
     // GET api/ecomarket/v1/inventarios
     @GetMapping
     public ResponseEntity<?> obtenerInventarios() {
-
-        List<Inventario> inventarios = inventarioService.obtenerInventarios();
+        List<InventarioResumenDTO> inventarios = inventarioService.getInventarios();
 
         if (inventarios.isEmpty()) {
             return ResponseEntity.status(204).body("No existen inventarios registrados en el sistema");
@@ -43,41 +43,25 @@ public class InventarioController {
     // GET api/ecomarket/v1/inventarios/1
     @GetMapping("/{idInventario}")
     public ResponseEntity<?> obtenerInventarioPorId(@PathVariable Long idInventario) {
-
-        Optional<Inventario> inventario = inventarioService.obtenerInventarioPorId(idInventario);
+        Optional<Inventario> inventario = inventarioService.getInvById(idInventario);
 
         if (!inventario.isEmpty()) {
             return ResponseEntity.status(200).body(inventario.get());
         }
-
         return ResponseEntity.status(404).body("Inventario no encontrado");
-    }
-
-    // Obtener el inventario de una tienda especifica
-    // GET api/ecomarket/v1/inventarios/tienda/1
-    @GetMapping("/tienda/{idTienda}")
-    public ResponseEntity<?> obtenerInventarioPorTienda(@PathVariable Long idTienda) {
-
-        List<Inventario> inventarios = inventarioService.obtenerInventarioPorTienda(idTienda);
-
-        if (inventarios.isEmpty()) {
-            return ResponseEntity.status(404).body("No se encontró inventario para la tienda");
-        }
-
-        return ResponseEntity.status(200).body(inventarios);
     }
 
     // Crear inventario para una tienda
     // POST api/ecomarket/v1/inventarios
     @PostMapping
     public ResponseEntity<String> guardarInventario(@Valid @RequestBody Inventario inventarioNuevo) {
-        return inventarioService.guardarInventario(inventarioNuevo);
+        return inventarioService.guardarInv(inventarioNuevo);
     }
 
     // Eliminar inventario
     // DELETE api/ecomarket/v1/inventarios/1
     @DeleteMapping("/{idInventario}")
     public ResponseEntity<String> eliminarInventario(@PathVariable Long idInventario) {
-        return inventarioService.eliminarInventario(idInventario);
+        return inventarioService.eliminarInv(idInventario);
     }
 }
