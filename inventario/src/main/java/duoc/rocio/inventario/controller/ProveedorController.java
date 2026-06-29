@@ -52,20 +52,39 @@ public class ProveedorController {
     // POST api/ecomarket/v1/proveedores
     @PostMapping
     public ResponseEntity<String> guardarProveedor(@Valid @RequestBody Proveedor proveedorNuevo) {
-        return proveedorService.guardarProv(proveedorNuevo);
+        int resultado = proveedorService.guardarProv(proveedorNuevo);
+        
+        if (resultado == 1) {
+            return ResponseEntity.status(409).body("El proveedor ya se encuentra registrado");
+        }
+        
+        return ResponseEntity.status(201).body("Proveedor registrado correctamente");
     }
 
     // Actualizar proveedor
     // PUT api/ecomarket/v1/proveedores/1
     @PutMapping("/{idProveedor}")
     public ResponseEntity<String> actualizarProveedor(@PathVariable Long idProveedor, @Valid @RequestBody Proveedor proveedorActualizado) {
-        return proveedorService.actualizarProveedor(idProveedor, proveedorActualizado);
+        boolean actualizado = proveedorService.actualizarProveedor(idProveedor, proveedorActualizado);
+        
+        if (!actualizado) {
+            return ResponseEntity.status(404).body("Proveedor no encontrado");
+        }
+        
+        return ResponseEntity.ok("Proveedor actualizado correctamente");
     }
 
     // Eliminar proveedor
     // DELETE api/ecomarket/v1/proveedores/1
     @DeleteMapping("/{idProveedor}")
-    public ResponseEntity<String> eliminarProveedor(@PathVariable Long idProveedor) {
-        return proveedorService.eliminarProv(idProveedor);
+public ResponseEntity<String> eliminarProveedor(@PathVariable Long idProveedor) {
+        
+        boolean eliminado = proveedorService.eliminarProv(idProveedor);
+        
+        if (eliminado) {
+            return ResponseEntity.ok("Proveedor eliminado correctamente");
+        } else {
+            return ResponseEntity.status(404).body("Proveedor no encontrado");
+        }
     }
 }

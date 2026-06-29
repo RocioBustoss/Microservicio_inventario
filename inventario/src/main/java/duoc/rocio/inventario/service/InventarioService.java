@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import duoc.rocio.inventario.dto.InventarioResumenDTO;
@@ -33,16 +32,16 @@ public class InventarioService {
         return inventarioRepository.findById(idInventario);
     }
 
-    public ResponseEntity<String> guardarInv(Inventario invNuevo) {
-        inventarioRepository.save(invNuevo);
-        return ResponseEntity.status(201).body("Inventario creado correctamente");
+    public Inventario guardarInv(Inventario invNuevo) {
+        return inventarioRepository.save(invNuevo);
     }
 
-    public ResponseEntity<String> eliminarInv(Long idInventario) {
+public boolean eliminarInv(Long idInventario) {
         if (!inventarioRepository.existsById(idInventario)) {
-            return ResponseEntity.status(404).body("Inventario no encontrado");
+            return false;
         }
+
         inventarioRepository.deleteById(idInventario);
-        return ResponseEntity.status(200).body("Inventario eliminado correctamente");
+        return true;
     }
 }

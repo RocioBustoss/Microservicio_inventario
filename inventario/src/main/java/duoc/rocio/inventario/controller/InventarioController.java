@@ -54,14 +54,16 @@ public class InventarioController {
     // Crear inventario para una tienda
     // POST api/ecomarket/v1/inventarios
     @PostMapping
-    public ResponseEntity<String> guardarInventario(@Valid @RequestBody Inventario inventarioNuevo) {
-        return inventarioService.guardarInv(inventarioNuevo);
+    public ResponseEntity<Inventario> guardarInventario(@Valid @RequestBody Inventario inventarioNuevo) {
+        Inventario inventarioGuardado = inventarioService.guardarInv(inventarioNuevo);
+        return ResponseEntity.status(201).body(inventarioGuardado);
     }
 
     // Eliminar inventario
     // DELETE api/ecomarket/v1/inventarios/1
     @DeleteMapping("/{idInventario}")
     public ResponseEntity<String> eliminarInventario(@PathVariable Long idInventario) {
-        return inventarioService.eliminarInv(idInventario);
+        inventarioService.eliminarInv(idInventario);
+        return ResponseEntity.status(200).body("Inventario eliminado correctamente");
     }
 }

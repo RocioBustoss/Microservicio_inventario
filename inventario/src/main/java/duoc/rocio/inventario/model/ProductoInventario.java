@@ -3,8 +3,6 @@ package duoc.rocio.inventario.model;
 
 import java.time.LocalDate;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -51,6 +49,5 @@ public class ProductoInventario {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_inventario", nullable = false)
-    @JsonBackReference
     private Inventario inventario;
 }

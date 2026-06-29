@@ -25,21 +25,21 @@ public class ProveedorService {
     }
 
 
-    public ResponseEntity<String> guardarProv(Proveedor proveedorNuevo){
-        if (proveedorRepository.existsByRut(proveedorNuevo.getRut())){
-            return ResponseEntity.status(409).body("El proveedor ya se encuentra registrado");
+    public int guardarProv(Proveedor proveedorNuevo) {
+        if (proveedorRepository.existsByRut(proveedorNuevo.getRut())) {
+            return 1;
         }
 
         proveedorRepository.save(proveedorNuevo);
-        return ResponseEntity.status(201).body("Proveedor registrado correctamente");
+        return 0;
     }
 
 
-    public ResponseEntity<String> actualizarProveedor(Long idProveedor, Proveedor proveedorActualizado) {
+    public boolean actualizarProveedor(Long idProveedor, Proveedor proveedorActualizado) {
         Optional<Proveedor> proveedorEncontrado = proveedorRepository.findById(idProveedor);
 
         if (proveedorEncontrado.isEmpty()) {
-            return ResponseEntity.status(404).body("Proveedor no encontrado");
+            return false;
         }
 
         Proveedor proveedor = proveedorEncontrado.get();
@@ -49,17 +49,17 @@ public class ProveedorService {
 
         proveedorRepository.save(proveedor);
 
-        return ResponseEntity.status(200).body("Proveedor actualizado correctamente");
+        return true;
     }
 
 
-    public ResponseEntity<String> eliminarProv(Long idProveedor){
+    public boolean eliminarProv(Long idProveedor){
         if (!proveedorRepository.existsById(idProveedor)) {
-            return ResponseEntity.status(404).body("Proveedor no encontrado");
+            return false;
         }
 
         proveedorRepository.deleteById(idProveedor);
-        return ResponseEntity.status(200).body("Proveedor eliminado correctamente");
+        return true;
     }
 }
 
