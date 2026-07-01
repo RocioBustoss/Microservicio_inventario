@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>InventarioService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">duoc.rocio.inventario.service</a> &gt; <span class="el_source">InventarioService.java</span></div><h1>InventarioService.java</h1><pre class="source lang-java linenums">package duoc.rocio.inventario.service;
+
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import duoc.rocio.inventario.dto.InventarioResumenDTO;
+import duoc.rocio.inventario.model.Inventario;
+import duoc.rocio.inventario.repository.InventarioRepository;
+
+@Service
+<span class="fc" id="L14">public class InventarioService {</span>
+
+    @Autowired
+    private InventarioRepository inventarioRepository;
+
+    public List&lt;InventarioResumenDTO&gt; getInventarios() {
+<span class="fc" id="L20">        List&lt;Inventario&gt; inventarios = inventarioRepository.findAll();</span>
+        
+        // EN VEZ DE MOSTRAR TODOS LOS INVENTARIOS (CON SUS PRODUCTOS) SOLO MUESTRA EL ID, NOMBRE Y DESCRIPCION
+<span class="fc" id="L23">        return inventarios.stream().map(inventario -&gt; new InventarioResumenDTO(</span>
+<span class="fc" id="L24">                inventario.getIdInventario(),</span>
+<span class="fc" id="L25">                inventario.getNombreInv(),</span>
+<span class="fc" id="L26">                inventario.getDescripcionInv()</span>
+            ))
+<span class="fc" id="L28">            .toList();</span>
+    }
+    
+    public Optional&lt;Inventario&gt; getInvById(Long idInventario) {
+<span class="fc" id="L32">        return inventarioRepository.findById(idInventario);</span>
+    }
+
+    public Inventario guardarInv(Inventario invNuevo) {
+<span class="fc" id="L36">        return inventarioRepository.save(invNuevo);</span>
+    }
+
+public boolean eliminarInv(Long idInventario) {
+<span class="fc bfc" id="L40" title="All 2 branches covered.">        if (!inventarioRepository.existsById(idInventario)) {</span>
+<span class="fc" id="L41">            return false;</span>
+        }
+
+<span class="fc" id="L44">        inventarioRepository.deleteById(idInventario);</span>
+<span class="fc" id="L45">        return true;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>
