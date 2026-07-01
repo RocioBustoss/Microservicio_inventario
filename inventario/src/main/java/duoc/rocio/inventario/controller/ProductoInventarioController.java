@@ -147,6 +147,7 @@ public class ProductoInventarioController {
 
     //Actualizar el stock de un producto específico en un inventario específico
     // PUT api/ecomarket/v1/productos/inventario/1/producto/1/stock?cantidad=20
+    @PutMapping("/inventario/{idInventario}/producto/{idProducto}/stock")
     public ResponseEntity<String> actualizarStock(@PathVariable Long idInventario, @PathVariable Long idProducto, @RequestParam int cantidad) {
         
         int resultado = productoInventarioService.actualizarStock(idInventario, idProducto, cantidad);

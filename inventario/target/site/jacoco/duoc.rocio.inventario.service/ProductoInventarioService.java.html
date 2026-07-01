@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ProductoInventarioService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">duoc.rocio.inventario.service</a> &gt; <span class="el_source">ProductoInventarioService.java</span></div><h1>ProductoInventarioService.java</h1><pre class="source lang-java linenums">package duoc.rocio.inventario.service;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+
+import duoc.rocio.inventario.model.Inventario;
+import duoc.rocio.inventario.model.ProductoInventario;
+import duoc.rocio.inventario.repository.InventarioRepository;
+import duoc.rocio.inventario.repository.ProductoInventarioRepository;
+import jakarta.transaction.Transactional;
+
+
+@Service
+<span class="fc" id="L19">public class ProductoInventarioService {</span>
+
+    //Conecta al repositorio de productoInventario
+    @Autowired
+    private ProductoInventarioRepository productoInventarioRepository;
+
+    //Conecta al repositorio de inventario
+    @Autowired
+    private InventarioRepository inventarioRepository;
+
+
+    //Agraga un producto a un inventario específico (ej: quix al inventario de San Pedro)
+    public int agregarProd(Long idInventario, ProductoInventario productoNuevo) {
+<span class="fc" id="L32">        Optional&lt;Inventario&gt; inventarioEncontrado = inventarioRepository.findById(idInventario);</span>
+        
+<span class="fc bfc" id="L34" title="All 2 branches covered.">        if (inventarioEncontrado.isEmpty()) {</span>
+<span class="fc" id="L35">            return 1;</span>
+        }
+        
+<span class="fc bfc" id="L38" title="All 2 branches covered.">        if (productoInventarioRepository.existsByInventario_IdInventarioAndCodigoSku(idInventario, productoNuevo.getCodigoSku())) {</span>
+<span class="fc" id="L39">            return 2;</span>
+        }
+        
+<span class="fc" id="L42">        productoNuevo.setInventario(inventarioEncontrado.get());</span>
+<span class="fc" id="L43">        productoInventarioRepository.save(productoNuevo);</span>
+        
+<span class="fc" id="L45">        return 0;</span>
+    }
+    
+    
+    public List&lt;ProductoInventario&gt; getProductosByInv(Long idInventario){
+<span class="fc" id="L50">        Optional&lt;Inventario&gt; inventarioEncontrado = inventarioRepository.findById(idInventario);</span>
+        
+        // Si no existe el inventario, devolvemos una lista vacía
+<span class="fc bfc" id="L53" title="All 2 branches covered.">        if (inventarioEncontrado.isEmpty()) {</span>
+<span class="fc" id="L54">            return new ArrayList&lt;&gt;(); </span>
+        }
+
+        // Extraemos el inventario y retornamos su lista de productos
+<span class="fc" id="L58">        Inventario inventario = inventarioEncontrado.get();</span>
+<span class="fc" id="L59">        return inventario.getProductos();        </span>
+    }
+    
+    
+    //Obtiene un producto por su id
+    public Optional&lt;ProductoInventario&gt; getProdById(Long idProducto) {
+<span class="fc" id="L65">        return productoInventarioRepository.findById(idProducto);</span>
+    }
+    
+
+    // Obtener un producto cruzando su ID y el ID de su inventario
+    public Optional&lt;ProductoInventario&gt; getProductoByInvAndId(Long idInventario, Long idProducto) {
+<span class="fc" id="L71">        return productoInventarioRepository.findByIdProductoAndInventario_IdInventario(idProducto, idInventario);</span>
+    }
+
+    //Busca el stock de un producto por su id
+    public Optional&lt;Integer&gt; consultarStock(Long idProducto, Long idInventario) {
+<span class="fc" id="L76">        Optional&lt;ProductoInventario&gt; productoEncontrado = productoInventarioRepository.findByIdProductoAndInventario_IdInventario(idProducto, idInventario);</span>
+
+<span class="fc bfc" id="L78" title="All 2 branches covered.">        if (productoEncontrado.isPresent()) {</span>
+<span class="fc" id="L79">            return Optional.of(productoEncontrado.get().getStockActual());</span>
+        }
+
+<span class="fc" id="L82">        return Optional.empty();</span>
+    }
+
+    
+    // Actualiza el stock por su id y asigna una cantidad.
+    @Transactional
+    public Integer actualizarStock(Long idInventario, Long idProducto, int cantidad) {
+        
+<span class="fc" id="L90">        Optional&lt;ProductoInventario&gt; productoEncontrado = productoInventarioRepository.findByIdProductoAndInventario_IdInventario(idProducto, idInventario);</span>
+        
+<span class="fc bfc" id="L92" title="All 2 branches covered.">        if (productoEncontrado.isEmpty()) return 1;</span>
+        
+<span class="fc bfc" id="L94" title="All 2 branches covered.">        if (cantidad &lt; 0) return 2;</span>
+            
+<span class="fc" id="L96">        ProductoInventario producto = productoEncontrado.get();</span>
+        
+<span class="fc" id="L98">        Integer stockActual = producto.getStockActual();</span>
+<span class="fc" id="L99">        Integer stockPosterior = stockActual + cantidad;</span>
+        
+<span class="fc bfc" id="L101" title="All 2 branches covered.">        if (stockActual.equals(stockPosterior)) return 3;</span>
+
+<span class="fc" id="L103">        producto.setStockActual(stockPosterior);</span>
+<span class="fc" id="L104">        productoInventarioRepository.save(producto);</span>
+        
+<span class="fc" id="L106">        return 0;</span>
+    }
+    
+    
+    // busca un producto en un inventario por su nombre
+    public List&lt;ProductoInventario&gt; findByNombre(Long idInventario, String nombreBuscado) {
+<span class="fc" id="L112">        return productoInventarioRepository.findByInventario_IdInventarioAndNombreProdContainingIgnoreCase(idInventario, nombreBuscado);</span>
+    }
+    
+    
+    // busca productos con stock menor a un umbral
+    public List&lt;ProductoInventario&gt; buscarStockBajo(Long idInventario,int umbral) {
+<span class="fc" id="L118">        return productoInventarioRepository.findByInventario_IdInventarioAndStockActualLessThanEqual(idInventario, umbral);</span>
+    }
+
+    //Elimina un producto por su id
+public boolean eliminarProducto(Long idProducto) {
+<span class="fc bfc" id="L123" title="All 2 branches covered.">        if (!productoInventarioRepository.existsById(idProducto)) {</span>
+<span class="fc" id="L124">            return false;</span>
+        }
+    
+<span class="fc" id="L127">        productoInventarioRepository.deleteById(idProducto);</span>
+<span class="fc" id="L128">        return true;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

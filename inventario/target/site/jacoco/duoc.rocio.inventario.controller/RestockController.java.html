@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RestockController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">duoc.rocio.inventario.controller</a> &gt; <span class="el_source">RestockController.java</span></div><h1>RestockController.java</h1><pre class="source lang-java linenums">package duoc.rocio.inventario.controller;
+
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import duoc.rocio.inventario.model.ProdRestock;
+import duoc.rocio.inventario.model.Restock;
+import duoc.rocio.inventario.service.RestockService;
+
+@RestController
+@RequestMapping(&quot;/api/ecomarket/v1/restocks&quot;)
+<span class="fc" id="L16">public class RestockController {</span>
+
+    @Autowired
+    private RestockService restockService;
+
+    // Crear una lista de restock vacía
+    // POST api/ecomarket/v1/restocks/proveedor/1/solicitante/2
+    @PostMapping(&quot;/proveedor/{idProveedor}/solicitante/{idSolicitante}&quot;)
+    public ResponseEntity&lt;String&gt; crearListaRestock(@PathVariable Long idProveedor, @PathVariable Long idSolicitante) {
+<span class="fc" id="L25">        boolean creado = restockService.crearListaRestock(idProveedor, idSolicitante);</span>
+
+<span class="fc bfc" id="L27" title="All 2 branches covered.">        if (!creado){</span>
+<span class="fc" id="L28">            return ResponseEntity.status(400).body(&quot;Proveedor no encontrado&quot;);            </span>
+        }
+        
+<span class="fc" id="L31">        return ResponseEntity.status(201).body(&quot;Lista de restock creada.&quot;);    </span>
+    }
+
+    // Agregar un producto a la lista
+    // POST api/ecomarket/v1/restocks/1/productos/5?cant=10
+    @PostMapping(&quot;/{idRestock}/productos/{idProdInv}&quot;)
+    public ResponseEntity&lt;String&gt; agregarProd(@PathVariable Long idRestock, @PathVariable Long idProdInv, @RequestParam int cant) {
+<span class="fc" id="L38">        Integer productoInteger = restockService.agregarProd(idRestock, idProdInv, cant);</span>
+
+<span class="fc bfc" id="L40" title="All 2 branches covered.">        if (productoInteger == 1){</span>
+<span class="fc" id="L41">            return ResponseEntity.status(404).body(&quot;Lista de restock no encontrada&quot;);</span>
+        }
+<span class="fc bfc" id="L43" title="All 2 branches covered.">        else if (productoInteger == 2){</span>
+<span class="fc" id="L44">            return ResponseEntity.status(404).body(&quot;Producto no encontrado en inventario&quot;);</span>
+        }
+        else {
+<span class="fc" id="L47">            return ResponseEntity.status(200).body(&quot;Producto agregado a la lista de restock&quot;);</span>
+        }
+    }
+
+    // Modificar la cantidad de un producto en la lista
+    // PUT api/ecomarket/v1/restocks/1/productos/3?cant=15
+    @PutMapping(&quot;/{idRestock}/productos/{idProdRestock}&quot;)
+    public ResponseEntity&lt;String&gt; modificarCant(@PathVariable Long idRestock, @PathVariable Long idProdRestock, @RequestParam int cant) {
+<span class="fc" id="L55">        Integer modificaInteger = restockService.modificarCant(idRestock, idProdRestock, cant);</span>
+
+<span class="fc bfc" id="L57" title="All 2 branches covered.">        if (modificaInteger == 1){</span>
+<span class="fc" id="L58">            return ResponseEntity.status(404).body(&quot;Lista no encontrada&quot;);</span>
+        }
+<span class="fc bfc" id="L60" title="All 2 branches covered.">        else if (modificaInteger == 2){</span>
+<span class="fc" id="L61">            return ResponseEntity.status(404).body(&quot;El producto no está en esta lista&quot;);</span>
+        }
+        else {
+<span class="fc" id="L64">            return ResponseEntity.status(200).body(&quot;Cantidad modificada correctamente&quot;);</span>
+        }
+
+    }
+
+    // Eliminar un producto de la lista
+    // DELETE api/ecomarket/v1/restocks/1/productos/3
+    @DeleteMapping(&quot;/{idRestock}/productos/{idProdRestock}&quot;)
+    public ResponseEntity&lt;String&gt; eliminarProd(@PathVariable Long idRestock, @PathVariable Long idProdRestock) {
+<span class="fc" id="L73">        Integer eliminaInteger = restockService.eliminarProd(idRestock, idProdRestock);</span>
+
+<span class="fc bfc" id="L75" title="All 2 branches covered.">        if (eliminaInteger == 1){</span>
+<span class="fc" id="L76">            return ResponseEntity.status(404).body(&quot;Lista no encontrada&quot;);</span>
+        }
+<span class="fc bfc" id="L78" title="All 2 branches covered.">        else if (eliminaInteger == 2){</span>
+<span class="fc" id="L79">            return ResponseEntity.status(404).body(&quot;El producto no se encontró en la lista&quot;);</span>
+        }
+        else {
+<span class="fc" id="L82">            return ResponseEntity.status(200).body(&quot;Producto removido de la lista&quot;);</span>
+        }    
+    }
+
+    // Obtener una solicitud específica (Con todos sus datos)
+    // GET api/ecomarket/v1/restocks/1
+    @GetMapping(&quot;/{idRestock}&quot;)
+    public ResponseEntity&lt;?&gt; mostrarRestock(@PathVariable Long idRestock) {
+<span class="fc" id="L90">        Optional&lt;Restock&gt; solicitud = restockService.mostrarRestock(idRestock);</span>
+        
+<span class="fc bfc" id="L92" title="All 2 branches covered.">        if (solicitud.isPresent()) {</span>
+<span class="fc" id="L93">            return ResponseEntity.status(200).body(solicitud.get());</span>
+        } else {
+<span class="fc" id="L95">            return ResponseEntity.status(404).body(&quot;Lista no encontrada&quot;);</span>
+        }
+    }
+
+    // Obtener solo los productos de una solicitud
+    // GET api/ecomarket/v1/restocks/1/productos
+    @GetMapping(&quot;/{idRestock}/productos&quot;)
+    public ResponseEntity&lt;?&gt; mostrarProductos(@PathVariable Long idRestock) {
+<span class="fc" id="L103">        Optional&lt;List&lt;ProdRestock&gt;&gt; productos = restockService.mostrarProductos(idRestock);</span>
+        
+<span class="fc bfc" id="L105" title="All 2 branches covered.">        if (productos.isPresent()) {</span>
+<span class="fc" id="L106">            return ResponseEntity.status(200).body(productos.get());</span>
+        } else {
+<span class="fc" id="L108">            return ResponseEntity.status(404).body(&quot;Lista no encontrada&quot;);</span>
+        }
+    }
+
+    // Aprobar solicitud
+    // PUT api/ecomarket/v1/restocks/1/aprobar?idAprobador=7
+    @PutMapping(&quot;/{idRestock}/aprobar&quot;)
+    public ResponseEntity&lt;String&gt; aprobarRestock(@PathVariable Long idRestock, @RequestParam Long idAprobador) {
+<span class="fc" id="L116">        int resultado = restockService.aprobarRestock(idRestock, idAprobador);</span>
+
+<span class="fc bfc" id="L118" title="All 2 branches covered.">        if (resultado == 1) {</span>
+<span class="fc" id="L119">            return ResponseEntity.status(404).body(&quot;Lista no encontrada&quot;);</span>
+        }
+<span class="fc bfc" id="L121" title="All 2 branches covered.">        else if (resultado == 2){</span>
+<span class="fc" id="L122">            return ResponseEntity.status(409).body(&quot;La solicitud ya fue procesada&quot;);</span>
+        }
+        else {
+<span class="fc" id="L125">            return ResponseEntity.ok(&quot;Solicitud aprobada y stock actualizado correctamente&quot;);</span>
+        }
+    }
+
+    // Rechazar solicitud
+    // PUT api/ecomarket/v1/restocks/1/rechazar?idAprobador=7
+    @PutMapping(&quot;/{idRestock}/rechazar&quot;)
+    public ResponseEntity&lt;String&gt; rechazarRestock(@PathVariable Long idRestock, @RequestParam Long idAprobador) {
+<span class="fc" id="L133">        int resultado = restockService.rechazarRestock(idRestock, idAprobador);</span>
+
+<span class="fc bfc" id="L135" title="All 2 branches covered.">        if (resultado == 1) {</span>
+<span class="fc" id="L136">            return ResponseEntity.status(404).body(&quot;Lista no encontrada&quot;);</span>
+        }
+<span class="fc bfc" id="L138" title="All 2 branches covered.">        else if (resultado == 2){</span>
+<span class="fc" id="L139">            return ResponseEntity.status(409).body(&quot;La solicitud ya fue procesada&quot;);</span>
+        }
+        else {
+<span class="fc" id="L142">            return ResponseEntity.ok(&quot;Solicitud de restock rechazada correctamente&quot;);</span>
+        }    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

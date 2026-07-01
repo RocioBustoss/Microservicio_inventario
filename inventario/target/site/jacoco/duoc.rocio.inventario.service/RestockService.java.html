@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RestockService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">duoc.rocio.inventario.service</a> &gt; <span class="el_source">RestockService.java</span></div><h1>RestockService.java</h1><pre class="source lang-java linenums">package duoc.rocio.inventario.service;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import duoc.rocio.inventario.model.ProdRestock;
+import duoc.rocio.inventario.model.ProductoInventario;
+import duoc.rocio.inventario.model.Proveedor;
+import duoc.rocio.inventario.model.Restock;
+import duoc.rocio.inventario.repository.ProductoInventarioRepository;
+import duoc.rocio.inventario.repository.ProveedorRepository;
+import duoc.rocio.inventario.repository.RestockRepository;
+
+@Service
+<span class="fc" id="L20">public class RestockService {</span>
+
+    @Autowired
+    private RestockRepository restockRepository;
+
+    @Autowired
+    private ProductoInventarioRepository productoInventarioRepository;
+
+    @Autowired
+    private ProveedorRepository proveedorRepository;
+
+
+
+    // CREAR LISTA DE RESTOCK VACÍA
+    public boolean crearListaRestock(Long idProveedor, Long idSolicitante) {
+<span class="fc" id="L35">        Optional&lt;Proveedor&gt; proveedorEncontrado = proveedorRepository.findById(idProveedor);</span>
+        
+<span class="fc bfc" id="L37" title="All 2 branches covered.">        if (proveedorEncontrado.isEmpty()) {</span>
+<span class="fc" id="L38">            return false;</span>
+        }
+
+<span class="fc" id="L41">        Restock nuevaLista = new Restock();</span>
+<span class="fc" id="L42">        nuevaLista.setProveedor(proveedorEncontrado.get());</span>
+<span class="fc" id="L43">        nuevaLista.setIdSolicitante(idSolicitante);</span>
+<span class="fc" id="L44">        nuevaLista.setFechaSolicitud(LocalDate.now());</span>
+<span class="fc" id="L45">        nuevaLista.setEstado(&quot;PENDIENTE&quot;);</span>
+
+<span class="fc" id="L47">        restockRepository.save(nuevaLista);</span>
+
+<span class="fc" id="L49">        return true;</span>
+    }
+
+    // AGREGAR PRODUCTO A LA LISTA
+    @Transactional
+    public int agregarProd(Long idRestock, Long idProdInv, int cant) {
+<span class="fc" id="L55">        Optional&lt;Restock&gt; restockBuscado = restockRepository.findById(idRestock);</span>
+<span class="fc bfc" id="L56" title="All 2 branches covered.">        if (restockBuscado.isEmpty()) return 1; </span>
+        
+<span class="fc" id="L58">        Optional&lt;ProductoInventario&gt; productoBuscado = productoInventarioRepository.findById(idProdInv);</span>
+<span class="fc bfc" id="L59" title="All 2 branches covered.">        if (productoBuscado.isEmpty()) return 2;</span>
+        
+<span class="fc" id="L61">        Restock restock = restockBuscado.get();</span>
+<span class="fc" id="L62">        ProductoInventario producto = productoBuscado.get();</span>
+
+<span class="fc" id="L64">        ProdRestock nuevoProdRestock = new ProdRestock();</span>
+<span class="fc" id="L65">        nuevoProdRestock.setNombre(producto.getNombreProd()); </span>
+<span class="fc" id="L66">        nuevoProdRestock.setCantidad(cant);</span>
+        
+<span class="fc" id="L68">        restock.getProductosRestock().add(nuevoProdRestock);</span>
+<span class="fc" id="L69">        restockRepository.save(restock);</span>
+
+<span class="fc" id="L71">        return 0;</span>
+    }
+
+    // MODIFICAR CANTIDAD DE UN PRODUCTO EN LA LISTA
+    @Transactional
+    public int modificarCant(Long idRestock, Long idProdRestock, int nuevaCant) {
+        
+<span class="fc" id="L78">        Optional&lt;Restock&gt; restockBuscado = restockRepository.findById(idRestock);</span>
+        
+<span class="fc bfc" id="L80" title="All 2 branches covered.">        if (restockBuscado.isEmpty()) return 1;</span>
+        
+<span class="fc" id="L82">        Restock restock = restockBuscado.get();</span>
+<span class="fc" id="L83">        ProdRestock productoEncontrado = null;</span>
+
+<span class="fc bfc" id="L85" title="All 2 branches covered.">        for (ProdRestock p : restock.getProductosRestock()) {</span>
+<span class="fc bfc" id="L86" title="All 2 branches covered.">            if (p.getIdProdRestock().equals(idProdRestock)) {</span>
+<span class="fc" id="L87">                productoEncontrado = p;</span>
+<span class="fc" id="L88">                break;</span>
+            }
+<span class="fc" id="L90">        }</span>
+
+<span class="fc bfc" id="L92" title="All 2 branches covered.">        if (productoEncontrado == null) return 2;</span>
+
+<span class="fc" id="L94">        productoEncontrado.setCantidad(nuevaCant);</span>
+<span class="fc" id="L95">        restockRepository.save(restock);</span>
+
+<span class="fc" id="L97">        return 0;</span>
+    }
+
+    @Transactional
+    public int eliminarProd(Long idRestock, Long idProdRestock) {
+        
+<span class="fc" id="L103">        Optional&lt;Restock&gt; restockBuscado = restockRepository.findById(idRestock);</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">        if (restockBuscado.isEmpty()) return 1;</span>
+
+<span class="fc" id="L106">        Restock restock = restockBuscado.get();</span>
+        
+<span class="fc" id="L108">        ProdRestock productoAEliminar = null;</span>
+
+<span class="fc bfc" id="L110" title="All 2 branches covered.">        for (ProdRestock p : restock.getProductosRestock()) {</span>
+<span class="fc bfc" id="L111" title="All 2 branches covered.">            if (p.getIdProdRestock().equals(idProdRestock)) {</span>
+<span class="fc" id="L112">                productoAEliminar = p;</span>
+<span class="fc" id="L113">                break;</span>
+            }
+<span class="fc" id="L115">        }</span>
+<span class="fc bfc" id="L116" title="All 2 branches covered.">        if (productoAEliminar == null) return 2;</span>
+
+<span class="fc" id="L118">        restock.getProductosRestock().remove(productoAEliminar);</span>
+<span class="fc" id="L119">        restockRepository.save(restock);</span>
+        
+<span class="fc" id="L121">        return 0;</span>
+    }
+
+    // 5. MOSTRAR RESTOCK COMPLETO
+    public Optional&lt;Restock&gt; mostrarRestock(Long idRestock) {
+<span class="fc" id="L126">        return restockRepository.findById(idRestock);</span>
+    }
+
+    // 6. MOSTRAR SOLO LOS PRODUCTOS DE UNA LISTA
+    public Optional&lt;List&lt;ProdRestock&gt;&gt; mostrarProductos(Long idRestock) {
+<span class="fc" id="L131">        Optional&lt;Restock&gt; solicitud = restockRepository.findById(idRestock);</span>
+        
+<span class="fc bfc" id="L133" title="All 2 branches covered.">        if (solicitud.isEmpty()) {</span>
+<span class="fc" id="L134">            return Optional.empty();</span>
+        }
+        
+<span class="fc" id="L137">        return Optional.of(solicitud.get().getProductosRestock());</span>
+    }
+
+    // 7. APROBAR RESTOCK
+    @Transactional
+    public int aprobarRestock(Long idRestock, Long idAprobador) {
+<span class="fc" id="L143">        Optional&lt;Restock&gt; solicitud1 = restockRepository.findById(idRestock);</span>
+<span class="fc bfc" id="L144" title="All 2 branches covered.">        if (solicitud1.isEmpty()) return 1;</span>
+
+<span class="fc" id="L146">        Restock solicitud = solicitud1.get();</span>
+
+<span class="fc bfc" id="L148" title="All 2 branches covered.">        if (!solicitud.getEstado().equalsIgnoreCase(&quot;PENDIENTE&quot;)) {</span>
+<span class="fc" id="L149">            return 2;</span>
+        }
+
+<span class="fc bfc" id="L152" title="All 2 branches covered.">        for (ProdRestock prodSolicitado : solicitud.getProductosRestock()) {</span>
+<span class="fc" id="L153">            Optional&lt;ProductoInventario&gt; prodInvOpt = productoInventarioRepository.findByNombreProd(prodSolicitado.getNombre());</span>
+            
+<span class="fc bfc" id="L155" title="All 2 branches covered.">            if (prodInvOpt.isPresent()) {</span>
+<span class="fc" id="L156">                ProductoInventario producto = prodInvOpt.get();</span>
+<span class="fc" id="L157">                producto.setStockActual(producto.getStockActual() + prodSolicitado.getCantidad());</span>
+<span class="fc" id="L158">                productoInventarioRepository.save(producto);</span>
+            }
+<span class="fc" id="L160">        }</span>
+
+<span class="fc" id="L162">        solicitud.setIdAprobador(idAprobador);</span>
+<span class="fc" id="L163">        solicitud.setEstado(&quot;APROBADO&quot;);</span>
+<span class="fc" id="L164">        restockRepository.save(solicitud);</span>
+
+<span class="fc" id="L166">        return 0;</span>
+    }
+
+    // 8. RECHAZAR RESTOCK
+    public int rechazarRestock(Long idRestock, Long idAprobador) {
+<span class="fc" id="L171">        Optional&lt;Restock&gt; solicitudOpt = restockRepository.findById(idRestock);</span>
+<span class="fc bfc" id="L172" title="All 2 branches covered.">        if (solicitudOpt.isEmpty()) return 1;</span>
+
+<span class="fc" id="L174">        Restock solicitud = solicitudOpt.get();</span>
+
+<span class="fc bfc" id="L176" title="All 2 branches covered.">        if (!solicitud.getEstado().equalsIgnoreCase(&quot;PENDIENTE&quot;)) {</span>
+<span class="fc" id="L177">            return 2;</span>
+        }
+
+<span class="fc" id="L180">        solicitud.setIdAprobador(idAprobador);</span>
+<span class="fc" id="L181">        solicitud.setEstado(&quot;RECHAZADO&quot;);</span>
+<span class="fc" id="L182">        restockRepository.save(solicitud);</span>
+
+<span class="fc" id="L184">        return 0;</span>
+    }
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

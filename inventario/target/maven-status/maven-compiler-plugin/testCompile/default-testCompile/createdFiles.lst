@@ -1,0 +1,9 @@
+duoc/rocio/inventario/controller/InventarioControllerTest.class
+duoc/rocio/inventario/InventarioApplicationTests.class
+duoc/rocio/inventario/controller/ProductoInventarioControllerTest.class
+duoc/rocio/inventario/controller/RestockControllerTest.class
+duoc/rocio/inventario/service/ProductoInventarioServiceTest.class
+duoc/rocio/inventario/service/ProveedorServiceTest.class
+duoc/rocio/inventario/service/RestockServiceTest.class
+duoc/rocio/inventario/service/InventarioServiceTest.class
+duoc/rocio/inventario/controller/ProveedorControllerTest.class
