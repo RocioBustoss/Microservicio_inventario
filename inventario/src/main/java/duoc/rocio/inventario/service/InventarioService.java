@@ -36,7 +36,7 @@ public class InventarioService {
         return inventarioRepository.save(invNuevo);
     }
 
-public boolean eliminarInv(Long idInventario) {
+    public boolean eliminarInv(Long idInventario) {
         if (!inventarioRepository.existsById(idInventario)) {
             return false;
         }
